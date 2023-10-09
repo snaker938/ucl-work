@@ -1,4 +1,5 @@
 import random
+import os
 
 # Task 1 ------------------------------
 
@@ -81,9 +82,11 @@ fullVerobse = False
 
 def decryptText(cipherText):
     possibleDecryptions = []
-
     def load_words():
-        with open('english_words') as word_file:
+        # open english_words.txt and return a set of words
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(script_dir, 'english_words')
+        with open(file_path) as word_file:
             valid_words = set(word_file.read().split())
         return valid_words
     english_words = load_words()

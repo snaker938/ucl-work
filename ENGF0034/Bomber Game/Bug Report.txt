@@ -46,10 +46,17 @@ How to fix: In the 'shrink' function:
 
 -- Bug 5 --
 
-Summary:
+Summary: The game does not procede to the next level when the user destroys all the buildings. The plane never lands.
 
-What should happen:
+What should happen: The plane should land if the user has destroyed all the buildings.
 
-How to reproduce:
+How to reproduce: Destroy all the buildings and the plane will not land.
 
-How to fix:
+How to fix: In the check_plane function, change the line:
+ 
+ if plane_body_bottom.getY() == CANVAS_HEIGHT and plane_body_bottom.getX() < 20:
+
+ to:
+ 
+ if plane_body_bottom.getY() >= CANVAS_HEIGHT and plane_body_bottom.getX() < 20:
+

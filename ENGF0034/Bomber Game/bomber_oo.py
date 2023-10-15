@@ -208,7 +208,7 @@ class Plane():
     def move(self):
         self.position.move(-4 * speed, 0)
         if self.position.getX() < -self.width:
-            self.position.move(CANVAS_WIDTH, 40)
+            self.position.move(CANVAS_WIDTH + self.width, 40)
             # ensure we don't go off the bottom of the screen
             if self.position.getY() > CANVAS_HEIGHT:
                 self.position.Y = CANVAS_HEIGHT
@@ -234,7 +234,7 @@ class Display(Frame):
         self.rand = Random()
 
         # create game objects
-        self.plane = Plane(self.canvas, CANVAS_WIDTH - 100, 0)
+        self.plane = Plane(self.canvas, CANVAS_WIDTH + 124, 0)
         self.bomb = Bomb(self.canvas)
         self.buildings = []
         self.building_width = SPACING * 0.8

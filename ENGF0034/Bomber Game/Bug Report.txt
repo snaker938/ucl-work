@@ -11,11 +11,41 @@ How to fix: Added a cleanup function for the bomb that deletes itself and resets
 
 -- Bug 2 --
 
+Summary: If the plane successfully crosses the canvas, it is redrawn at an offset to the right of the canvas. This makes it impossible to hit the furthest right building.
+
+What should happen: The plane should fly onto the canvas, rather than appearing on the canvas immediatly.
+
+How to reproduce: Launching the game and trying to hit the furthest building on the right.
+
+How to fix: In the 'move' function of the Plane, add an offset of self.width. self.position.move(CANVAS_WIDTH, 40) changed to self.position.move(CANVAS_WIDTH + self.width, 40).
 
 -- Bug 3 --
 
+Summary:
+
+What should happen:
+
+How to reproduce:
+
+How to fix:
 
 -- Bug 4 --
 
+Summary:
+
+What should happen:
+
+How to reproduce:
+
+How to fix:
+
 
 -- Bug 5 --
+
+Summary:
+
+What should happen:
+
+How to reproduce:
+
+How to fix:

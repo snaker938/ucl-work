@@ -1,0 +1,21 @@
+-- Bug 1 --
+
+Summary:
+
+What should happen:
+
+How to reproduce:
+
+How to fix:
+
+
+-- Bug 2 --
+
+
+-- Bug 3 --
+
+
+-- Bug 4 --
+
+
+-- Bug 5 --

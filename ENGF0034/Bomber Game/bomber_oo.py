@@ -83,9 +83,7 @@ class Building():
 
     def is_inside(self, point):
         if point.X < self.x or point.X > self.x + self.width or point.Y < CANVAS_HEIGHT-self.height:
-            print("point is outside building")
             return False
-        print("point is inside building")
         return True
 
     ''' shrink the building when a bomb drops on it '''
@@ -150,6 +148,13 @@ class Bomb():
 
     def explode(self):
         self.falling = False
+
+    '''cleanup is called when the bomb hits the ground or a building'''
+
+    def cleanup(self):
+        self.canvas.delete(self.polygon)
+        self.falling = False
+        self.drawn = False
 
 
 ''' The Plane class holds the state associated with the plane. '''
@@ -281,7 +286,13 @@ class Display(Frame):
         for building in self.buildings:
             if building.is_inside(self.bomb.position):
                 self.bomb.explode()
+                self.bomb.cleanup()
                 building.shrink()
+                return
+
+        # did the bomb hit the ground?
+        if self.bomb.position.getY() > CANVAS_HEIGHT:
+            self.bomb.cleanup()
 
     ''' check the state of the plane each frame '''
 

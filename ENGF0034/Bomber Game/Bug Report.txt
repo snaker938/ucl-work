@@ -1,12 +1,12 @@
 -- Bug 1 --
 
-Summary:
+Summary: If a bomb goes off the screen (does not hit a building), no extra bombs can be dropped
 
-What should happen:
+What should happen: The player should be able to drop more bombs if they didnt hit a building
 
-How to reproduce:
+How to reproduce: Drop a bomb in between buildings
 
-How to fix:
+How to fix: Added a cleanup function for the bomb that deletes itself and resets its falling and drawn states. Call this function if the bomb goes off the canvas screen or it hits a building.
 
 
 -- Bug 2 --

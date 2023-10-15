@@ -271,6 +271,10 @@ class Display(Frame):
         for building_num in range(0, 1200//SPACING):
             # random number between 10 and 500
             height = self.rand.randint(10, 500)
+
+            if building_num*SPACING + self.building_width > CANVAS_WIDTH:
+                continue
+
             self.buildings.append(Building(self.canvas, building_num, height,
                                            self.building_width))
 

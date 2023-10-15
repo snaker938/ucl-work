@@ -21,13 +21,13 @@ How to fix: In the 'move' function of the Plane, add an offset of self.width. se
 
 -- Bug 3 --
 
-Summary:
+Summary: Buildings are being rendered outside of the canvas which could not be hit by the bombs.
 
-What should happen:
+What should happen: No buildings should be rendered outside of the canvas.
 
-How to reproduce:
+How to reproduce: Run the game, and look at the very far right, you see the edge of a building.
 
-How to fix:
+How to fix: Only create a building if not  building_num*SPACING + self.building_width > CANVAS_WIDTH.
 
 -- Bug 4 --
 

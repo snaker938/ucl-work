@@ -31,13 +31,17 @@ How to fix: Only create a building if not  building_num*SPACING + self.building_
 
 -- Bug 4 --
 
-Summary:
+Summary: Buildings were not being destroyed completely.
 
-What should happen:
+What should happen: Buildings still had a bit of height and were displaying on the canvas when they should have been destroyed.
 
-How to reproduce:
+How to reproduce: Bomb a building as much as you can. The bomb will fall through it when the building should be destroyed.
 
-How to fix:
+How to fix: In the 'shrink' function:
+        if self.height <= 50:
+            self.cleanup()
+            self.height = -999
+            return
 
 
 -- Bug 5 --

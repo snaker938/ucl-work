@@ -164,11 +164,14 @@ class TimeView():
 
     def update(self, time_now):
         remaining = self.end_time - time_now
-        if remaining > 0:
+        
+        if (1500 + (CANVAS_WIDTH - 20*remaining - 100)) < CANVAS_WIDTH - 100:
             self.canvas.delete(self.bar)
-            self.bar = self.canvas.create_rectangle(CANVAS_WIDTH - 20*remaining - 100, GRID_SIZE*16.25,
+            self.bar = self.canvas.create_rectangle(1500 + (CANVAS_WIDTH - 20*remaining - 100), GRID_SIZE*16.25,
                                                CANVAS_WIDTH - 100, GRID_SIZE*16.75, fill="green")
-
+            return True
+        else:
+            return False
             
 class View(Frame):
     def __init__(self, root, controller):
@@ -317,6 +320,7 @@ class View(Frame):
         for car_view in self.car_views:
             car_view.redraw()
         self.display_score()
-        self.timer.update(now)
+        if not self.timer.update(now):
+            self.game_over()
         self.frog_view.redraw(now)
 

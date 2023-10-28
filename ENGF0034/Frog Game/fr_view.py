@@ -158,9 +158,13 @@ class TimeView():
         self.canvas = canvas
         self.end_time = time.time()
         self.bar = self.canvas.create_rectangle(0,0,0,0) #placeholder
+        self.time_running = True
+        self.time_checked = False
 
     def reset(self, end_time):
         self.end_time = end_time
+        self.time_running = True
+        self.time_checked = False
 
     def update(self, time_now):
         # If the game is not running, dont do anything
@@ -177,7 +181,16 @@ class TimeView():
                                                CANVAS_WIDTH - 100, GRID_SIZE*16.75, fill="green")
             return True
         else:
+            self.time_running = False
             return False
+    
+    def check_time(self):
+        if self.time_running == False and self.time_checked == False:
+            self.time_checked = True
+            return False
+        else:
+            return True
+    
             
 class View(Frame):
     def __init__(self, root, controller):
@@ -329,8 +342,9 @@ class View(Frame):
         self.display_score()
       
         if not (len(self.lives_frogs)) == 0:
-            # print("updating timer...")
-            if not self.timer.update(now):
-                self.game_over()
+            if self.timer.check_time():
+                if not self.timer.update(now):
+                    pass
+                    # self.game_over()
         self.frog_view.redraw(now)
 

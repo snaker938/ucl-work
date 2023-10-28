@@ -83,6 +83,7 @@ class Controller():
         for view in self.views:
             view.game_over()
         
+        
     def key(self, event):
         if event.char == 'a' or event.keysym == 'Left':
             self.model.move_frog(Direction.LEFT)
@@ -102,10 +103,13 @@ class Controller():
     def run(self):
         i = 0
         last_time = time.time()
-        while self.running:
+        while self.running: 
             self.model.update()
             for view in self.views:
                 view.update()
+                if not view.timer.check_time():
+                    print("Game over...")
+                    self.model.game_over()
             self.root.update()
             i = i + 1
             if i == 60:

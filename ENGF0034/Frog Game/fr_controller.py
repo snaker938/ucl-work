@@ -108,7 +108,6 @@ class Controller():
             for view in self.views:
                 view.update()
                 if not view.timer.check_time():
-                    print("Game over...")
                     self.model.game_over()
             self.root.update()
             i = i + 1

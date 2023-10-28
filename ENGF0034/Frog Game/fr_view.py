@@ -163,6 +163,12 @@ class TimeView():
         self.end_time = end_time
 
     def update(self, time_now):
+        # If the game is not running, dont do anything
+        if self.end_time == 0:
+            # Game is not running
+            pass
+       
+        
         remaining = self.end_time - time_now
         
         if (1500 + (CANVAS_WIDTH - 20*remaining - 100)) < CANVAS_WIDTH - 100:
@@ -306,6 +312,7 @@ class View(Frame):
         self.canvas.itemconfig(self.text2, text="Press r to play again.", font=self.scorefont,
                                fill="white")
         self.messages_displayed = True
+        
 
     def clear_messages(self):
         if self.messages_displayed:
@@ -320,7 +327,10 @@ class View(Frame):
         for car_view in self.car_views:
             car_view.redraw()
         self.display_score()
-        if not self.timer.update(now):
-            self.game_over()
+      
+        if not (len(self.lives_frogs)) == 0:
+            # print("updating timer...")
+            if not self.timer.update(now):
+                self.game_over()
         self.frog_view.redraw(now)
 

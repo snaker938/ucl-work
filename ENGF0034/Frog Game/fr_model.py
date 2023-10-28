@@ -317,6 +317,8 @@ class Model():
             
     def new_life(self):
         self.controller.update_lives(self.lives)
+        self.frog.reset_position()
+    
 
     def game_over(self):
         self.game_running = False

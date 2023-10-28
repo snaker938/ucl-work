@@ -348,6 +348,9 @@ class Model():
         self.create_cars()
         self.won = False
         self.paused = False
+        self.game_running = True
+        
+
 
     def move_frog(self, dir):
         if self.game_running and not self.paused:

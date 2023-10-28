@@ -1,0 +1,3 @@
+-- 1 --
+
+If the user loses all their lives, and tries to reset the level, everything is reset correctly, but the game is frozen.

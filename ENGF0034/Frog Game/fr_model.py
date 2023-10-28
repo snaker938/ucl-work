@@ -132,6 +132,8 @@ class Frog():
             
     ''' move due to user input '''
     def move(self, dir):
+        if self.y + GRID_SIZE//2 > self.start_position[1] and dir == Direction.DOWN:
+            return
         if self.moving:
             return
         self.direction = dir
@@ -407,9 +409,14 @@ class Model():
             return
         
         (x, y) = self.frog.get_position()
+        # check if we're off the screen, in the x direction. The frog should not be able to go lower than its initial y position
         if x < 0 or x > CANVAS_WIDTH:
             self.died()
             return
+        elif y > CANVAS_HEIGHT:
+            self.died()
+            return
+
 
         if y >= GRID_SIZE * 10 and y <= GRID_SIZE * 14:
             # frog is on the road

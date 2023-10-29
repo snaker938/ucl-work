@@ -102,6 +102,7 @@ class Frog():
         self.y = y
         self.direction = Direction.UP
         self.log = None #we're not on a log yet
+        self.turtle = None #we're not on a turtle yet
         self.moving = False #we're not moving
 
     def get_position(self):
@@ -116,9 +117,12 @@ class Frog():
     ''' which log are we on, or None if we're not on a log '''
     def on_log(self):
         return self.log
+    
+    def on_turtle(self):
+        return self.turtle        
 
     ''' we're on a log.  Move along with it. '''
-    def move_with(self, log):
+    def move_with_log(self, log):
         if self.log != log:
             #we've just joined this log
             self.log = log
@@ -129,6 +133,18 @@ class Frog():
             x_delta = log_x - self.log_x
             self.x = self.x + x_delta
             self.log_x = log_x
+    
+    def move_with_turtle(self, turtle):
+        if self.turtle != turtle:
+            #we've just joined this turtle
+            self.turtle = turtle
+            (self.turtle_x, turtle_y) = turtle.get_position()
+            #no need to move this time
+        else:
+            (turtle_x, turtle_y) = turtle.get_position()
+            x_delta = turtle_x - self.turtle_x
+            self.x = self.x + x_delta
+            self.turtle_x = turtle_x
             
     ''' move due to user input '''
     def move(self, dir):
@@ -378,12 +394,29 @@ class Model():
                     on_long = log
                     break
         if on_log is None:
-            # frog is not on a log - it must be in the water
-            self.died()
-            return
+            # frog is not on a log - check if it's on a turtle
+            on_turtle = self.frog.on_turtle()
+            if (not (on_turtle is None)) and (not on_turtle.contains(self.frog)):
+                # frog was on a turtle, but has now left that turtle
+                on_turtle = None
+            if on_turtle is None:
+                # it's no longer on the previous turtle
+                # check if it's now on any other turtle
+                for turtle in self.logs:
+                    if turtle.contains(self.frog):
+                        on_turtle = turtle
+                        break
+            if on_log is None:
+                # frog is not on a log or turtle
+                if on_turtle is None:
+                    # frog is in the water
+                    self.died()
+                else:
+                    # frog is on a turtle
+                    self.frog.move_with_turtle(on_turtle)
         else:
             # frog is on a log
-            self.frog.move_with(on_log)
+            self.frog.move_with_log(on_log)
 
     def check_frog_crossing_road(self):
         # frog is on the road

@@ -1,3 +1,52 @@
 -- 1 --
 
-If the user loses all their lives, and tries to reset the level, everything is reset correctly, but the game is frozen.
+Summary: The user is not able to walk onto turtles without dying.
+
+What should happen: The user should be able to jump onto the turtles and move with them and be able to jump off them.
+
+How to replicate: Try to jump on a turtle, you will die.
+
+How to fix: 
+
+-- 2 --
+
+Summary: The user is able to move the frog off the screen in the DOWN direction.
+
+What should happen: The frog should die if it goes beyond the canvas in the UP direction. The frog should not be able to move below its initial starting position.
+
+How to replicate: Try moving the frog downwards from it initial starting position.
+
+How to fix: In the "move" function, check if the user is trying to move the frog below the starting position, if so, do nothing. Also check that if the y position of the frog is off the canvas, then the frog should die.
+
+-- 3 --
+
+Summary: If the user has lost all their lives, and tries to reset the game, everything is reset correctly, but the game is in a frozen state.
+
+What should happen: When the user resets the game, the game should run smoothly.
+
+How to replicate: Lose all your lives and try resetting the game, the game is then unplayable.
+
+How to fix: In the reset_level function of the model class, set the variable game_running to true.
+
+-- 4 --
+
+Summary: If the frog dies, and the user still has lives left, the new frog is not respawned properly.
+
+What should happen: The frog should be respawned at the start positition after one second.
+
+How to replicate: Crash into an obstacle to kill the frog.
+
+How to fix: In the new_life function of the Model class, run the "reset_position" function to reset the position of the frog.
+
+-- 5 --
+
+Summary: The timer is not being displayed correctly. The timer is being displayed off the screen and the game does not end if the timer runs out. The timer also continues updating if the user uses up all their lives and the game is over.
+
+What should happen: The timer should not be rendered off the screen. If the timer runs out, the game over screen should be displayed and the user should be able to reset the game. If the user uses up all their lives, the timer bar should not be updated anymore.
+
+How to replicate: Start the game and observe the timer, for a short while it seems as if the timer is not getting smaller as time goes on, but then it becomes apparent that it is just being rendered off the screen. If you wait long enough for the timer to run out, the game is not stopped. Use up all your frog lives and observe the timer, the timer is still counting down.
+
+How to fix: To make the game stop when the time runs out: in the update function of the TimeView class, if the rectangle width is smaller than the rightmost edge, then return True, if not return False. When you call the timer update function in the update function of the View class, make sure that this function is only called if the user has not used up all of their lives otherwise - if True is returned, call the game_over function. Furthermore, if the end_time variable is 0, the pass out of the update function of the TimeView class.
+
+To fix the timer being rendered off the screen, add an offset in the update function of the TimeView class in the code that creates the rectangle for the timer.
+

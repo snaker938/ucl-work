@@ -6,103 +6,38 @@
 
 struct Node endNode;
 
-// This function returns the shortest path to the end node
-struct Node *getShortestPath(struct Node endNode)
+void getAllNodes(struct Node grid[GRID_WIDTH][GRID_HEIGHT], struct Node *allNodes[GRID_WIDTH * GRID_HEIGHT])
 {
-    // Define the variable currentNode and set it to the end node
-    struct Node currentNode = endNode;
-
-    // Allocate memory for the shortestPath array
-    struct Node *shortestPath = (struct Node *)malloc(GRID_WIDTH * GRID_HEIGHT * sizeof(struct Node));
-
-    // Check if memory allocation was successful
-    if (shortestPath == NULL)
-    {
-        printf("Memory allocation failed\n");
-        return NULL; // Handle the error appropriately
-    }
-
-    // Define the variable i
-    int i = 0;
-
-    // While the currentNode is not the start node
-    while (currentNode.distance != 0)
-    {
-        // Add the currentNode to the shortestPath array
-        shortestPath[i] = currentNode;
-
-        // Set the currentNode to the previous node
-        currentNode = *(currentNode.previousNode);
-
-        // Increment i
-        i++;
-    }
-
-    // Return the shortestPath array
-    return shortestPath;
-}
-
-// Function to shift elements in an array to the right by one position
-void shiftNeighbourElements(struct Node neighbours[4])
-{
-    // Shift the elements to the right
-    for (int i = 3; i > 0; i--)
-    {
-        neighbours[i] = neighbours[i - 1];
-    }
-}
-
-// Function to get all nodes from 2D array and put them into a 1D array
-void getAllNodes(struct Node grid[GRID_WIDTH][GRID_HEIGHT], struct Node allNodes[GRID_WIDTH * GRID_HEIGHT])
-{
-    // Define the variable i
-    int i;
-
-    // Define the variable j
-    int j;
-
     // For each node in the grid
-    for (i = 0; i < GRID_WIDTH; i++)
+    for (int i = 0; i < GRID_WIDTH; i++)
     {
-        for (j = 0; j < GRID_HEIGHT; j++)
+        for (int j = 0; j < GRID_HEIGHT; j++)
         {
-            // Add the node to the allNodes array
-            allNodes[i * GRID_WIDTH + j] = grid[i][j];
+            // Add a pointer to the node in the allNodes array
+            allNodes[i * GRID_WIDTH + j] = &grid[i][j];
         }
     }
 }
 
 // This function sorts all the nodes passed into it by their distance property
-void sortNodesByDistance(struct Node nodesToBeSorted[GRID_WIDTH * GRID_HEIGHT])
+void sortNodesByDistance(struct Node *nodesToBeSorted)
 {
-    // Define the variable n and set it to the length of the nodesToBeSorted array
     int n = GRID_WIDTH * GRID_HEIGHT;
-
-    // Define the variable i
-    int i;
-
-    // Define the variable j
-    int j;
-
-    // Define the variable tempNode
     struct Node tempNode;
 
-    // For each node in the nodesToBeSorted array
-    for (i = 0; i < n; i++)
+    for (int i = 0; i < n; i++)
     {
-        // For each node in the nodesToBeSorted array
-        for (j = 0; j < n - 1; j++)
+        for (int j = 0; j < n - 1; j++)
         {
-            // If the distance of the current node is greater than the distance of the next node
+            if (&nodesToBeSorted[j] == NULL || &nodesToBeSorted[j + 1] == NULL)
+            {
+                continue; // Skip iteration if a NULL pointer is encountered
+            }
+
             if (nodesToBeSorted[j].distance > nodesToBeSorted[j + 1].distance)
             {
-                // Set the tempNode to the current node
                 tempNode = nodesToBeSorted[j];
-
-                // Set the current node to the next node
                 nodesToBeSorted[j] = nodesToBeSorted[j + 1];
-
-                // Set the next node to the tempNode
                 nodesToBeSorted[j + 1] = tempNode;
             }
         }
@@ -110,7 +45,7 @@ void sortNodesByDistance(struct Node nodesToBeSorted[GRID_WIDTH * GRID_HEIGHT])
 }
 
 // Function to shift elements in an array to the left by one position
-void shiftArray(struct Node array[], int length)
+void shiftArray(struct Node *array, int length)
 {
     for (int i = 0; i < length - 1; i++)
     {
@@ -119,148 +54,208 @@ void shiftArray(struct Node array[], int length)
 }
 
 // This function updates the distances of the neighbours. If there are no nodes to update, then it does nothing
-void updateNeighbourDistances(struct Node neighbours[4], struct Node currentNode)
+void updateNeighbourDistances(struct Node *neighbours[4], struct Node *currentNodePtr, int neighbourCount)
 {
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < neighbourCount; i++)
     {
-        neighbours[i].distance = currentNode.distance + 1;
-        neighbours[1].previousNode = &currentNode;
+        neighbours[i]->distance = currentNodePtr->distance + 1;
+        neighbours[i]->previousNode = currentNodePtr;
+    }
+}
+
+// Function to shift elements in an array to the right by one position
+void shiftNeighbourElements(struct Node *neighbours[4])
+{
+    // Shift the elements to the right
+    for (int i = 3; i > 0; i--)
+    {
+        neighbours[i] = neighbours[i - 1];
     }
 }
 
 // This function collects all the neighbours of the currentNode, then passes these nodes to a new function to update their distances
-void updateNeighboursOfNode(struct Node currentNode, struct Node grid[GRID_WIDTH][GRID_HEIGHT])
+void updateNeighboursOfNode(struct Node *currentNodePtr, struct Node (*grid)[GRID_WIDTH][GRID_HEIGHT])
 {
     // holds all the neighbours of the current node. The maximum neighbours is 4. The minimum could be zero. It does not matter if this is left empty at the end of this function
-    struct Node neighbours[4];
+    struct Node *neighbours[4];
+
+    int neighbourCount = 0;
 
     // define the row and column of the current node
-    int row = currentNode.x;
-    int col = currentNode.y;
+    int row = (*currentNodePtr).x;
+    int col = (*currentNodePtr).y;
 
-    if (row > 0 && grid[row - 1][col].distance > currentNode.distance)
+    if (row > 0 && (*grid)[row - 1][col].distance > (*currentNodePtr).distance)
     {
+        neighbourCount++;
         shiftNeighbourElements(neighbours);
-        neighbours[0] = grid[row - 1][col];
+        neighbours[0] = &(*grid)[row - 1][col];
     }
 
-    if (row < GRID_WIDTH - 1 && grid[row + 1][col].distance > currentNode.distance)
+    if (row < GRID_WIDTH - 1 && (*grid)[row + 1][col].distance > (*currentNodePtr).distance)
     {
+        neighbourCount++;
         shiftNeighbourElements(neighbours);
-        neighbours[0] = grid[row + 1][col];
+        neighbours[0] = &(*grid)[row + 1][col];
     }
 
-    if (col > 0 && grid[row][col - 1].distance > currentNode.distance)
+    if (col > 0 && (*grid)[row][col - 1].distance > (*currentNodePtr).distance)
     {
+        neighbourCount++;
         shiftNeighbourElements(neighbours);
-        neighbours[0] = grid[row][col - 1];
+        neighbours[0] = &(*grid)[row][col - 1];
     }
 
     if (
         col < GRID_WIDTH - 1 &&
-        grid[row][col + 1].distance > currentNode.distance)
+        (*grid)[row][col + 1].distance > (*currentNodePtr).distance)
     {
+        neighbourCount++;
         shiftNeighbourElements(neighbours);
-        neighbours[0] = grid[row][col + 1];
+        neighbours[0] = &(*grid)[row][col + 1];
     }
 
-    // loop through the neighbours array, and print the (x,y) for each
-    // for (int i = 0; i < 4; i++)
-    // {
-    //     printf("Neighbour %d: (%d, %d)\n", i, neighbours[i].x, neighbours[i].y);
-    // }
-
     // Update the distances of the neighbours of the currentNode
-    updateNeighbourDistances(neighbours, currentNode);
+    updateNeighbourDistances(neighbours, currentNodePtr, neighbourCount);
 }
 
-int dijkstra(int startX, int startY, struct Node grid[GRID_WIDTH][GRID_HEIGHT])
+// This function will only work once every node up to the end node has been updated. This function will infact never be called if the end node is not accessible.
+struct Node *getShortestPath(struct Node visitedNodes[GRID_WIDTH * GRID_HEIGHT])
+{
+    // count how many nodes that do not have a distance of 9999 in the visitedNodes array
+    int nodeCount = 0;
+
+    for (int i = 0; i < GRID_WIDTH * GRID_HEIGHT; i++)
+    {
+        if (visitedNodes[i].distance != 9999)
+        {
+            nodeCount++;
+        }
+    }
+
+    // Allocate memory for the shortestPath array
+    struct Node *shortestPath = (struct Node *)malloc(nodeCount * sizeof(struct Node));
+
+    // Define the currentNode and set it to the end node
+    struct Node currentNode = endNode;
+
+    // print the previous node of the currentNode
+    printf("Previous node: (%d, %d)\n", currentNode.previousNode->x, currentNode.previousNode->y);
+
+    // print the
+
+    // This while loop will keep on backtracking through the previous node until the currentNode is null, which is when we have reached the start node - as the start node has no previous node.
+    // while (currentNode.previousNode != NULL)
+    // {
+    //     // Add the currentNode to the shortestPath array
+    //     shortestPath[nodeCount - 1] = currentNode;
+
+    //     // Set the currentNode to the previous node
+    //     currentNode = *(currentNode.previousNode);
+
+    //     // Decrement nodeCount
+    //     nodeCount--;
+    // }
+
+    // Return the shortestPath array
+    // return shortestPath;
+}
+
+int dijkstra(int startX, int startY, struct Node (*grid)[GRID_WIDTH][GRID_HEIGHT])
 {
 
     int visitedNodeIndex = 0;
 
     // This is a list of every node in the grid
 
-    struct Node allUnvisitedNodes[GRID_WIDTH * GRID_HEIGHT];
+    struct Node *allUnvisitedNodes[GRID_WIDTH * GRID_HEIGHT];
 
-    getAllNodes(grid, allUnvisitedNodes);
+    getAllNodes((*grid), allUnvisitedNodes);
 
     // This is an empty list of visited nodes in the grid. The maximum number of nodes is GRID_WIDTH * GRID_HEIGHT
     struct Node visitedNodes[GRID_WIDTH * GRID_HEIGHT];
 
-    // Define the variable currentNode and set it to the start node
-    struct Node currentNode = grid[startX][startY];
+    // Set each visitedNode property to default initially
+    for (int i = 0; i < GRID_WIDTH * GRID_HEIGHT; i++)
+    {
+        visitedNodes[i].previousNode = NULL;
 
-    // Set the distance of the start node to 0
-    currentNode.distance = 0;
+        visitedNodes[i].wall = 0;
+        visitedNodes[i].marker = 0;
+        visitedNodes[i].visited = 0;
+        visitedNodes[i].distance = 9999;
+        visitedNodes[i].home = 0;
+        visitedNodes[i].robot = 0;
+
+        visitedNodes[i].x = -1;
+        visitedNodes[i].y = -1;
+    }
+
+    // Define the variable currentNodePtr and set it to the address of start node. Retrieve the start node from the allUnvisitedNodes array
+    struct Node *currentNodePtr = allUnvisitedNodes[((startX * 10) + startY)];
+
+    (*currentNodePtr).distance = 0;
 
     // Add the start node to the list of visited nodes
-    visitedNodes[visitedNodeIndex] = currentNode;
+    visitedNodes[visitedNodeIndex] = *currentNodePtr;
 
     // error checking
-    // int error = 0;
+    int maxCheck = 0;
 
-    // sleep(1);
-
-    /*
-    while ((currentNode.x > GRID_WIDTH || currentNode.y > GRID_HEIGHT))
+    while (maxCheck < GRID_HEIGHT * GRID_WIDTH)
     {
-        error++;
-        if (error > 1)
-        {
-            printf("Error: infinite loop\n");
-            break;
-        }
-
-
-
-        sleep(1);
-
-        printf("Test 1");
-
-        // Increment the visitedNodeIndex
-        visitedNodeIndex++;
+        maxCheck++;
 
         // Sorts the allUnvisitedNodes array by the distance property of each node
-        sortNodesByDistance(allUnvisitedNodes);
+        sortNodesByDistance(*allUnvisitedNodes);
 
         // removes the first (closest) node from the allUnvisitedNodes array
-        currentNode = allUnvisitedNodes[0];
+        currentNodePtr = &(*allUnvisitedNodes[0]);
 
-        int length = sizeof(allUnvisitedNodes) / sizeof(allUnvisitedNodes[0]);
-        shiftArray(allUnvisitedNodes, length);
-
-        printf("Test 2");
+        allUnvisitedNodes[99] = NULL;
 
         // if the currentNode is a marker, then break out of the loop
-        if (currentNode.marker == 1)
+        if ((*currentNodePtr).marker == 1)
         {
-            endNode = currentNode;
+            printf("Marker found\n");
+            // print x and y of current node
+            printf("Marker: (%d, %d)\n", (*currentNodePtr).x, (*currentNodePtr).y);
+
+            endNode = (*currentNodePtr);
             break;
         }
 
         // If the currentNode is a wall, then continue to the next iteration of the loop
-        if (currentNode.wall == 1)
+        if ((*currentNodePtr).wall == 1)
         {
             continue;
         }
 
-        printf("Test 3");
-
         // Update the distances of the neighbours of the currentNode
-        updateNeighboursOfNode(currentNode, grid);
+        updateNeighboursOfNode(currentNodePtr, grid);
 
         // If the current node is not a wall, add it to the list of visited nodes
-        if (currentNode.wall == 0)
+        if ((*currentNodePtr).wall == 0)
         {
-            visitedNodes[visitedNodeIndex] = currentNode;
+            visitedNodeIndex++;
+            visitedNodes[visitedNodeIndex] = (*currentNodePtr);
         }
 
-
+        int length = sizeof(allUnvisitedNodes) / sizeof(allUnvisitedNodes[0]);
+        shiftArray(*allUnvisitedNodes, length);
     }
-    */
+
+    // print the distance of index 2 of visited nodes
 
     // Once the end node has been reached...
+
+    struct Node *shortestPath = getShortestPath(visitedNodes);
+
+    // print out the shortest path
+    // for (int i = 0; i < sizeof(shortestPath) / sizeof(shortestPath[0]); i++)
+    // {
+    //     printf("Shortest path: (%d, %d)\n", shortestPath[i].x, shortestPath[i].y);
+    // }
 
     // sortNodesByDistance(visitedNodes);
 

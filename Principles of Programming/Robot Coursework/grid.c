@@ -150,7 +150,7 @@ void displayGrid(int direction, int startX, int startY)
             }
         }
     }
-    dijkstra(startX, startY, grid);
+    dijkstra(startX, startY, &grid);
 }
 
 void initialiseGrid(int startX, int startY, int startDirection)
@@ -173,10 +173,10 @@ void initialiseGrid(int startX, int startY, int startDirection)
             grid[i][j].y = j;
 
             // Set the walls
-            if (i == 2 && j == 3)
-            {
-                grid[i][j].wall = 1;
-            }
+            // if (i == 2 && j == 3)
+            // {
+            //     grid[i][j].wall = 1;
+            // }
 
             // Set the markers
             if (i == 4 && j == 5)

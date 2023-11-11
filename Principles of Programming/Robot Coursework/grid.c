@@ -3,6 +3,8 @@
 #include "graphics.h"
 #include "utils.h"
 #include "dijkstra.h"
+#include <stdlib.h>
+#include <time.h>
 
 struct Node grid[GRID_WIDTH][GRID_HEIGHT];
 
@@ -88,10 +90,13 @@ void displayRobot(int x, int y, int direction)
 
 // Function to display the grid
 // Function to display the empty grid
-void displayGrid(int direction, int startX, int startY)
+void displayGrid(int direction)
 {
+    setColour(black);
+
     // Implement the code to display the grid
-    int gridSize, xOffset, yOffset;
+    int gridSize,
+        xOffset, yOffset;
     int minOffset = 10;
 
     if (WIN_WIDTH - 2 * minOffset < WIN_HEIGHT - 2 * minOffset)
@@ -150,17 +155,18 @@ void displayGrid(int direction, int startX, int startY)
             }
         }
     }
-    dijkstra(startX, startY, &grid);
 }
 
 void initialiseGrid(int startX, int startY, int startDirection)
 {
+    srand((unsigned int)time(NULL));
     for (int i = 0; i < GRID_WIDTH; i++)
     {
         for (int j = 0; j < GRID_HEIGHT; j++)
         {
 
-            grid[i][j].previousNode = NULL;
+            grid[i][j].previousNode[0] = -1;
+            grid[i][j].previousNode[1] = -1;
 
             grid[i][j].wall = 0;
             grid[i][j].marker = 0;
@@ -172,18 +178,6 @@ void initialiseGrid(int startX, int startY, int startDirection)
             grid[i][j].x = i;
             grid[i][j].y = j;
 
-            // Set the walls
-            // if (i == 2 && j == 3)
-            // {
-            //     grid[i][j].wall = 1;
-            // }
-
-            // Set the markers
-            if (i == 4 && j == 5)
-            {
-                grid[i][j].marker = 1;
-            }
-
             if (i == startX && j == startY)
             {
                 grid[i][j].home = 1;
@@ -192,6 +186,148 @@ void initialiseGrid(int startX, int startY, int startDirection)
         }
     }
 
+    // Generate the number of walls and markers specified by the constants WALL_COUNT and MARKER_COUNT
+    int wallCount = 0;
+    int markerCount = 0;
+
+    while (wallCount < WALL_COUNT)
+    {
+        int x = rand() % GRID_WIDTH;
+        int y = rand() % GRID_HEIGHT;
+
+        if (grid[x][y].wall == 0 && grid[x][y].home == 0 && grid[x][y].marker == 0)
+        {
+            grid[x][y].wall = 1;
+            wallCount++;
+        }
+    }
+
+    while (markerCount < MARKER_COUNT)
+    {
+        int x = rand() % GRID_WIDTH;
+        int y = rand() % GRID_HEIGHT;
+
+        if (grid[x][y].marker == 0 && grid[x][y].home == 0 && grid[x][y].wall == 0)
+        {
+            grid[x][y].marker = 1;
+            markerCount++;
+        }
+    }
+
     // Display the grid
-    displayGrid(startDirection, startX, startY);
+    displayGrid(startDirection);
+    struct Node *shortestPath = dijkstra(grid, startX, startY);
+
+    // While the shortestPath is not NULL, do the code below
+
+    while (shortestPath != NULL)
+    {
+
+        int *currentX = &startX;
+        int *currentY = &startY;
+        int *direction = &startDirection;
+
+        // Make sure to initialize i to 1 if the robot is already at the start node (index 0)
+        int i = 0;
+
+        while (shortestPath[i].previousNode[0] != -2 && shortestPath[i].previousNode[1] != -2)
+        {
+            // terminate the while loop if shortestPath[i + 1].previousNode[0] == -2 && shortestPath[i + 1].previousNode[1] == -2
+            if (shortestPath[i + 1].previousNode[0] == -2 && shortestPath[i + 1].previousNode[1] == -2)
+            {
+                // display the robot at the final position on the end marker
+                grid[*currentX][*currentY].robot = 0;
+                *currentX = shortestPath[i].x;
+                *currentY = shortestPath[i].y;
+                grid[*currentX][*currentY].robot = 1;
+                clear();
+                displayGrid(*direction);
+                break;
+            }
+
+            // set the robot value to 0
+            grid[*currentX][*currentY].robot = 0;
+
+            // Determine the direction based on the next node's position
+            if (shortestPath[i + 1].y > shortestPath[i].y)
+            {
+                *direction = 3; // East
+            }
+            else if (shortestPath[i + 1].y < shortestPath[i].y)
+            {
+                *direction = 1; // West
+            }
+            else if (shortestPath[i + 1].x > shortestPath[i].x)
+            {
+                *direction = 2; // South
+            }
+            else if (shortestPath[i + 1].x < shortestPath[i].x)
+            {
+                *direction = 0; // North
+            }
+
+            // Update the robot's position
+            *currentX = shortestPath[i].x;
+            *currentY = shortestPath[i].y;
+
+            grid[*currentX][*currentY].robot = 1;
+
+            clear();
+
+            // display the grid
+            displayGrid(*direction);
+
+            sleep(500);
+
+            // Move to the next node in the shortest path
+            i++;
+        }
+
+        // Return to the home node
+        for (int j = i; j >= 0; j--)
+        {
+            // Clear the previous robot position
+            grid[*currentX][*currentY].robot = 0;
+            grid[*currentX][*currentY].marker = 0;
+
+            // Update the robot's position to the previous node
+            *currentX = shortestPath[j].x;
+            *currentY = shortestPath[j].y;
+            grid[*currentX][*currentY].robot = 1; // Set the robot at the new position
+            grid[*currentX][*currentY].marker = 1;
+
+            // Determine the new direction
+            // Determine the direction based on the next node's position
+            if (shortestPath[j - 1].y > shortestPath[j].y)
+            {
+                *direction = 3; // East
+            }
+            else if (shortestPath[j - 1].y < shortestPath[j].y)
+            {
+                *direction = 1; // West
+            }
+            else if (shortestPath[j - 1].x > shortestPath[j].x)
+            {
+                *direction = 2; // South
+            }
+            else if (shortestPath[j - 1].x < shortestPath[j].x)
+            {
+                *direction = 0; // North
+            }
+
+            // Redraw the grid with the robot in the new position
+            clear();
+
+            displayGrid(*direction);
+
+            sleep(500); // Delay for visibility
+        }
+        // set the marker value of the grid[startX][startY] to 0
+        grid[startX][startY].marker = 0;
+
+        shortestPath = dijkstra(grid, startX, startY);
+    }
+
+    // print no path found
+    printf("No path found\n");
 }

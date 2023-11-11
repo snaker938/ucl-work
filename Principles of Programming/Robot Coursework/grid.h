@@ -5,8 +5,8 @@
 #define GRID_WIDTH 10
 #define GRID_HEIGHT 10
 
-#define MARKER_COUNT 1
-#define WALL_COUNT 4
+#define WALL_COUNT 20
+#define MARKER_COUNT 10
 
 struct Node
 {
@@ -15,7 +15,7 @@ struct Node
     int wall;
     int marker;
     int home;
-    struct Node *previousNode;
+    int previousNode[2];
     int robot;
     int x;
     int y;

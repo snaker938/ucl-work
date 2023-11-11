@@ -7,46 +7,32 @@
 
 int main(int argc, char **argv)
 {
+    // Set window size using defined constants.
     setWindowSize(WIN_WIDTH, WIN_HEIGHT);
 
-    // The default values if the command line arguments are not given.
-    int initialX = 0;
-    int initialY = 0;
+    // Default values for initial position and direction.
+    int initialX = 0, initialY = 0, numericalDirection = 0;
     char *initialDirection = "north";
 
-    int numericalDirection;
-
-    if (argc == 4) // Four arguments were typed
+    // Update initial position and direction if command line arguments are provided.
+    if (argc == 4)
     {
-        initialX = atoi(argv[1]);   // Get x value
-        initialY = atoi(argv[2]);   // Get y value
-        initialDirection = argv[3]; // Get direction
+        initialX = atoi(argv[1]);
+        initialY = atoi(argv[2]);
+        initialDirection = argv[3];
 
-        // Convert the direction to a number
-        if (strcmp(initialDirection, "north") == 0)
-        {
-            numericalDirection = 0;
-        }
-        else if (strcmp(initialDirection, "west") == 0)
-        {
+        // Map direction string to a numerical value.
+        if (strcmp(initialDirection, "west") == 0)
             numericalDirection = 1;
-        }
         else if (strcmp(initialDirection, "south") == 0)
-        {
             numericalDirection = 2;
-        }
         else if (strcmp(initialDirection, "east") == 0)
-        {
             numericalDirection = 3;
-        }
-        else
-        {
-            return 0;
-        }
+        // "north" remains the default (0), so no need to check for it.
     }
 
-    // Call the drawRobot function with the parsed arguments
+    // Initialize grid with the provided or default position and direction.
     initialiseGrid(initialX, initialY, numericalDirection);
 
-    return 0;
+    return 0; // Exit program.
 }

@@ -6,155 +6,177 @@
 #include <stdlib.h>
 #include <time.h>
 
-struct Node grid[GRID_WIDTH][GRID_HEIGHT];
+struct Node grid[GRID_WIDTH][GRID_HEIGHT]; // Declare the main grid
 
+// Stores the top-left coordinates of each grid square for drawing purposes
 int gridTopLeftCoords[GRID_WIDTH][GRID_HEIGHT][2];
+
+// Stores the size of each grid square for drawing purposes
 int SQUARE_SIZE;
 
-// Function to display the marker
+// Draws the marker on the grid at the specified coordinates
 void displayMarker(int x, int y)
 {
     setColour(gray);
     fillRect(gridTopLeftCoords[x][y][0], gridTopLeftCoords[x][y][1], SQUARE_SIZE, SQUARE_SIZE);
 }
 
-// Function to display the wall
+// Draws the wall on the grid at the specified coordinates
 void displayWall(int x, int y)
 {
     setColour(black);
     fillRect(gridTopLeftCoords[x][y][0], gridTopLeftCoords[x][y][1], SQUARE_SIZE, SQUARE_SIZE);
 }
 
-// Function to display the home square
+// Draws the home square on the grid at the specified coordinates
 void displayHome(int x, int y)
 {
     setColour(blue);
     fillRect(gridTopLeftCoords[x][y][0], gridTopLeftCoords[x][y][1], SQUARE_SIZE, SQUARE_SIZE);
 }
 
-// Function to display the robot which is a triangle pointing in the direction of the variable "direction"
-void displayRobot(int x, int y, int direction)
+// Function to set the points of a triangle representing the robot in a given direction
+void setTrianglePoints(int direction, int topLeftX, int topLeftY, int size, int *xPoints, int *yPoints)
 {
-    // Set the colour to red to represent the robot
-    setColour(red);
+    int midX = topLeftX + size / 2;
+    int midY = topLeftY + size / 2;
 
-    // Define the size of the robot triangle
-    int robotSize = SQUARE_SIZE / 2;
-
-    // Define the points of the triangle based on the robot's position and direction
-    int topLeftX = gridTopLeftCoords[x][y][0];
-    int topLeftY = gridTopLeftCoords[x][y][1];
-    int xPoints[3];
-    int yPoints[3];
-
-    // Calculate the coordinates for the triangle based on the direction
     switch (direction)
     {
     case 0: // North
-        xPoints[0] = topLeftX + SQUARE_SIZE / 2;
+        xPoints[0] = midX;
         yPoints[0] = topLeftY;
         xPoints[1] = topLeftX;
-        yPoints[1] = topLeftY + SQUARE_SIZE;
-        xPoints[2] = topLeftX + SQUARE_SIZE;
-        yPoints[2] = topLeftY + SQUARE_SIZE;
+        yPoints[1] = topLeftY + size;
+        xPoints[2] = topLeftX + size;
+        yPoints[2] = topLeftY + size;
         break;
     case 1: // West
         xPoints[0] = topLeftX;
-        yPoints[0] = topLeftY + SQUARE_SIZE / 2;
-        xPoints[1] = topLeftX + SQUARE_SIZE;
+        yPoints[0] = midY;
+        xPoints[1] = topLeftX + size;
         yPoints[1] = topLeftY;
-        xPoints[2] = topLeftX + SQUARE_SIZE;
-        yPoints[2] = topLeftY + SQUARE_SIZE;
+        xPoints[2] = topLeftX + size;
+        yPoints[2] = topLeftY + size;
         break;
     case 2: // South
-        xPoints[0] = topLeftX + SQUARE_SIZE / 2;
-        yPoints[0] = topLeftY + SQUARE_SIZE;
+        xPoints[0] = midX;
+        yPoints[0] = topLeftY + size;
         xPoints[1] = topLeftX;
         yPoints[1] = topLeftY;
-        xPoints[2] = topLeftX + SQUARE_SIZE;
+        xPoints[2] = topLeftX + size;
         yPoints[2] = topLeftY;
         break;
     case 3: // East
-        xPoints[0] = topLeftX + SQUARE_SIZE;
-        yPoints[0] = topLeftY + SQUARE_SIZE / 2;
+        xPoints[0] = topLeftX + size;
+        yPoints[0] = midY;
         xPoints[1] = topLeftX;
         yPoints[1] = topLeftY;
         xPoints[2] = topLeftX;
-        yPoints[2] = topLeftY + SQUARE_SIZE;
+        yPoints[2] = topLeftY + size;
         break;
     }
+}
 
-    // Call the fillPolygon function to draw the triangle representing the robot
+// Function to display the robot, which is a triangle pointing in the direction specified by "direction"
+void displayRobot(int x, int y, int direction)
+{
+    // Set the robot's colour and calculate its size
+    setColour(red);
+    int robotSize = SQUARE_SIZE / 2;
+
+    // Get the top-left coordinates for the robot's grid square
+    int topLeftX = gridTopLeftCoords[x][y][0];
+    int topLeftY = gridTopLeftCoords[x][y][1];
+
+    // Arrays to hold the points for the robot triangle
+    int xPoints[3], yPoints[3];
+
+    // Calculate the points for the triangle based on the robot's direction
+    setTrianglePoints(direction, topLeftX, topLeftY, SQUARE_SIZE, xPoints, yPoints);
+
+    // Draw the robot triangle on the grid
     fillPolygon(3, xPoints, yPoints);
 }
 
-// Function to display the grid
-// Function to display the empty grid
-void displayGrid(int direction)
+// Calculate the size of the grid and offsets based on the window dimensions
+void calculateGridSize(int *gridSize, int *xOffset, int *yOffset)
 {
-    setColour(black);
-
-    // Implement the code to display the grid
-    int gridSize,
-        xOffset, yOffset;
-    int minOffset = 10;
-
+    int minOffset = 10; // Minimum space to leave from window edges
+    // Determine the smaller dimension for square grid and calculate offsets
     if (WIN_WIDTH - 2 * minOffset < WIN_HEIGHT - 2 * minOffset)
     {
-        gridSize = WIN_WIDTH - 2 * minOffset;
-        xOffset = minOffset;
-        yOffset = (WIN_HEIGHT - gridSize) / 2;
+        *gridSize = WIN_WIDTH - 2 * minOffset;   // Width is the limiting dimension
+        *xOffset = minOffset;                    // Horizontal offset is the minimum offset
+        *yOffset = (WIN_HEIGHT - *gridSize) / 2; // Vertical offset centers the grid
     }
     else
     {
-        gridSize = WIN_HEIGHT - 2 * minOffset;
-        xOffset = (WIN_WIDTH - gridSize) / 2;
-        yOffset = minOffset;
+        *gridSize = WIN_HEIGHT - 2 * minOffset; // Height is the limiting dimension
+        *xOffset = (WIN_WIDTH - *gridSize) / 2; // Horizontal offset centers the grid
+        *yOffset = minOffset;                   // Vertical offset is the minimum offset
     }
+}
 
-    // Draw the grid with the largest possible square within the window
-    int i, j;
-    for (i = 0; i <= GRID_HEIGHT; i++)
+// Draw the grid lines on the screen
+void drawGridLines(int gridSize, int xOffset, int yOffset)
+{
+    setColour(black); // Set the line colour to black
+    // Draw horizontal grid lines
+    for (int i = 0; i <= GRID_HEIGHT; i++)
     {
-        for (j = 0; j <= GRID_WIDTH; j++)
+        drawLine(xOffset, yOffset + i * (gridSize / GRID_HEIGHT), xOffset + gridSize, yOffset + i * (gridSize / GRID_HEIGHT));
+    }
+    // Draw vertical grid lines
+    for (int j = 0; j <= GRID_WIDTH; j++)
+    {
+        drawLine(xOffset + j * (gridSize / GRID_WIDTH), yOffset, xOffset + j * (gridSize / GRID_WIDTH), yOffset + gridSize);
+    }
+}
+
+// Store the top left coordinates of each grid square
+void storeGridCoords(int gridSize, int xOffset, int yOffset)
+{
+    // Iterate over each grid square to store its coordinates
+    for (int i = 0; i < GRID_HEIGHT; i++)
+    {
+        for (int j = 0; j < GRID_WIDTH; j++)
         {
-            // draw the vertical lines
-            drawLine(xOffset + j * (gridSize / GRID_WIDTH), yOffset, xOffset + j * (gridSize / GRID_WIDTH), yOffset + gridSize);
-
-            // draw the horizontal lines
-            drawLine(xOffset, yOffset + i * (gridSize / GRID_HEIGHT), xOffset + gridSize, yOffset + i * (gridSize / GRID_HEIGHT));
-
-            // store the top left coordinates of each square
             gridTopLeftCoords[i][j][0] = xOffset + j * (gridSize / GRID_WIDTH);
             gridTopLeftCoords[i][j][1] = yOffset + i * (gridSize / GRID_HEIGHT);
         }
     }
+    SQUARE_SIZE = gridSize / GRID_WIDTH; // Define the size of each square in the grid
+}
 
-    SQUARE_SIZE = gridSize / GRID_WIDTH;
-
-    // Call the functions to display the elements based on the last non-empty element in the 1D array
-    for (i = 0; i < GRID_HEIGHT; i++)
+// Display the grid elements like markers, walls, home, and robot
+void displayGridElements(int direction)
+{
+    // Loop through the grid to display each element based on its attributes
+    for (int i = 0; i < GRID_HEIGHT; i++)
     {
-        for (j = 0; j < GRID_WIDTH; j++)
+        for (int j = 0; j < GRID_WIDTH; j++)
         {
             if (grid[i][j].marker == 1)
-            {
-                displayMarker(i, j);
-            }
+                displayMarker(i, j); // Display marker if present
             if (grid[i][j].wall == 1)
-            {
-                displayWall(i, j);
-            }
+                displayWall(i, j); // Display wall if present
             if (grid[i][j].home == 1)
-            {
-                displayHome(i, j);
-            }
+                displayHome(i, j); // Display home if present
             if (grid[i][j].robot == 1)
-            {
-                displayRobot(i, j, direction);
-            }
+                displayRobot(i, j, direction); // Display robot if present
         }
     }
+}
+
+// Main function to display the grid
+void displayGrid(int direction)
+{
+    int gridSize, xOffset, yOffset;
+    calculateGridSize(&gridSize, &xOffset, &yOffset); // Calculate grid size and offsets
+    drawGridLines(gridSize, xOffset, yOffset);        // Draw the grid lines
+    storeGridCoords(gridSize, xOffset, yOffset);      // Store grid coordinates for other elements
+    displayGridElements(direction);                   // Display grid elements
 }
 
 void initialiseGrid(int startX, int startY, int startDirection)
@@ -324,6 +346,9 @@ void initialiseGrid(int startX, int startY, int startDirection)
         }
         // set the marker value of the grid[startX][startY] to 0
         grid[startX][startY].marker = 0;
+
+        // free the memory allocated to shortestPath
+        free(shortestPath);
 
         shortestPath = dijkstra(grid, startX, startY);
     }

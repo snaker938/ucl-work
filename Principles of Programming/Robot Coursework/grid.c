@@ -314,34 +314,10 @@ void moveRobot(int startX, int startY, int startDirection)
     printf("No path found\n");
 }
 
-void initialiseGrid(int startX, int startY, int startDirection)
+// Function to generate the walls and markers in the grid
+void generateWallsAndMarkers()
 {
     srand((unsigned int)time(NULL));
-    for (int i = 0; i < GRID_WIDTH; i++)
-    {
-        for (int j = 0; j < GRID_HEIGHT; j++)
-        {
-
-            grid[i][j].previousNode[0] = -1;
-            grid[i][j].previousNode[1] = -1;
-
-            grid[i][j].wall = 0;
-            grid[i][j].marker = 0;
-            grid[i][j].visited = 0;
-            grid[i][j].distance = 9999;
-            grid[i][j].home = 0;
-            grid[i][j].robot = 0;
-
-            grid[i][j].x = i;
-            grid[i][j].y = j;
-
-            if (i == startX && j == startY)
-            {
-                grid[i][j].home = 1;
-                grid[i][j].robot = 1;
-            }
-        }
-    }
 
     // Generate the number of walls and markers specified by the constants WALL_COUNT and MARKER_COUNT
     int wallCount = 0;
@@ -370,6 +346,38 @@ void initialiseGrid(int startX, int startY, int startDirection)
             markerCount++;
         }
     }
+}
+
+void initialiseGrid(int startX, int startY, int startDirection)
+{
+    for (int i = 0; i < GRID_WIDTH; i++)
+    {
+        for (int j = 0; j < GRID_HEIGHT; j++)
+        {
+
+            grid[i][j].previousNode[0] = -1;
+            grid[i][j].previousNode[1] = -1;
+
+            grid[i][j].wall = 0;
+            grid[i][j].marker = 0;
+            grid[i][j].visited = 0;
+            grid[i][j].distance = 9999;
+            grid[i][j].home = 0;
+            grid[i][j].robot = 0;
+
+            grid[i][j].x = i;
+            grid[i][j].y = j;
+
+            if (i == startX && j == startY)
+            {
+                grid[i][j].home = 1;
+                grid[i][j].robot = 1;
+            }
+        }
+    }
+
+    // Generate the walls and markers
+    generateWallsAndMarkers();
 
     // Display the grid
     displayGrid(startDirection);

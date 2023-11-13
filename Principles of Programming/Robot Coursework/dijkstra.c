@@ -58,22 +58,22 @@ void updateNeighboursOfNode(struct Node *currentNode, struct Node grid[GRID_WIDT
 
     if (row > 0 && !grid[row - 1][col].visited && !grid[row - 1][col].wall)
     {
-        neighbours[neighbourCount++] = &grid[row - 1][col];
+        neighbours[neighbourCount++] = &grid[row - 1][col]; // Bottom neighbour
     }
 
     if (row < GRID_WIDTH - 1 && !grid[row + 1][col].visited && !grid[row + 1][col].wall)
     {
-        neighbours[neighbourCount++] = &grid[row + 1][col];
+        neighbours[neighbourCount++] = &grid[row + 1][col]; // Top neighbour
     }
 
     if (col > 0 && !grid[row][col - 1].visited && !grid[row][col - 1].wall)
     {
-        neighbours[neighbourCount++] = &grid[row][col - 1];
+        neighbours[neighbourCount++] = &grid[row][col - 1]; // Left neighbour
     }
 
     if (col < GRID_HEIGHT - 1 && !grid[row][col + 1].visited && !grid[row][col + 1].wall)
     {
-        neighbours[neighbourCount++] = &grid[row][col + 1];
+        neighbours[neighbourCount++] = &grid[row][col + 1]; // Right neighbour
     }
 
     updateNeighbourDistances(neighbours, currentNode, neighbourCount);
@@ -93,8 +93,8 @@ struct Node *getShortestPath(struct Node grid[GRID_WIDTH][GRID_HEIGHT], struct N
         current = &grid[prevX][prevY];
     }
 
-    // Allocate an extra element for the sentinel value
-    struct Node *shortestPath = (struct Node *)malloc((pathLength + 2) * sizeof(struct Node)); // +2 for sentinel
+    // Allocate an extra element for the terminator node
+    struct Node *shortestPath = (struct Node *)malloc((pathLength + 2) * sizeof(struct Node)); // +2 for terminator node
     current = &endNode;
 
     // Fill the array backwards since we're traversing the path from end to start
@@ -110,7 +110,7 @@ struct Node *getShortestPath(struct Node grid[GRID_WIDTH][GRID_HEIGHT], struct N
         current = &grid[prevX][prevY];
     }
 
-    // Set the sentinel value at the end
+    // Set the terminator node's values at the end
     shortestPath[pathLength + 1].x = -1;
     shortestPath[pathLength + 1].y = -1;
     shortestPath[pathLength + 1].previousNode[0] = -2; // Use -2 to differentiate from start node
@@ -173,9 +173,6 @@ struct Node *dijkstra(struct Node grid[GRID_WIDTH][GRID_HEIGHT], int startX, int
         // If the loop completes without finding the end marker, no path exists
         return NULL;
     }
-
-    // print the end node distance
-    // printf("End node distance: %d\n", endNode->distance);
 
     // If the end node is found, construct the shortest path
     return getShortestPath(grid, *endNode);

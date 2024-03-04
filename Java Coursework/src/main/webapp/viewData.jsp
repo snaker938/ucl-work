@@ -14,17 +14,21 @@ contentType="text/html;charset=UTF-8" language="java" %>
       }
 
       /* Styles for the patient list container */
+
       .patient-list-container {
         background-color: #f0f0f0;
-        border-radius: 10px; /* Rounded corners */
+        border-radius: 10px;
         padding: 20px;
+        padding-bottom: 30px; /* Increased padding at the bottom */
         position: fixed;
         top: 0;
         left: 0;
-        height: 100vh;
-        width: 250px; /* Initial width */
-        overflow-y: auto; /* Enable scrolling for long lists */
-        transition: width 0.3s ease-in-out; /* Smooth transition on expansion/collapse */
+        height: calc(
+          100vh - 30px
+        ); /* Adjusted height to account for added padding */
+        width: 250px;
+        overflow-y: auto;
+        transition: width 0.3s ease-in-out;
       }
 
       /* Styles for the expanded state */
@@ -52,6 +56,9 @@ contentType="text/html;charset=UTF-8" language="java" %>
         border: none;
         cursor: pointer;
         outline: none; /* Remove default outline */
+        transform: rotate(
+          90deg
+        ); /* Initial rotation to point the arrow in the correct direction */
       }
 
       /* SVG styles for the expand/collapse icon */
@@ -63,7 +70,9 @@ contentType="text/html;charset=UTF-8" language="java" %>
       }
 
       .toggle-button.expanded svg {
-        transform: rotate(180deg); /* Rotate icon on expansion */
+        transform: rotate(
+          180deg
+        ); /* Correct this as needed to ensure it points in the desired direction */
       }
 
       /* Styles for individual patient names */
@@ -95,7 +104,9 @@ contentType="text/html;charset=UTF-8" language="java" %>
     <script>
       function togglePatientList() {
         const container = document.querySelector('.patient-list-container');
+        const button = document.querySelector('.toggle-button');
         container.classList.toggle('expanded');
+        button.classList.toggle('expanded'); // Ensure this line is added to toggle the class on the button as well.
       }
     </script>
   </body>

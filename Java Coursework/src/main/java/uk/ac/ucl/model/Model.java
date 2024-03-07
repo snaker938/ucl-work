@@ -27,6 +27,26 @@ public class Model {
         return fullNames;
     }
 
+    // Create a function getPaitentStateFrequency to get the frequency of each patient state
+    public int getPatientStateFrequency(String state) {
+        int count = 0;
+        for (int i = 0; i < dataFrame.getRowCount(); i++) {
+            if (dataFrame.getValue("STATE", i).equals(state)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    // Create a function to get all the patient states
+    public String[] getAllPatientStates() {
+        String[] patientStates = new String[dataFrame.getRowCount()];
+        for (int i = 0; i < dataFrame.getRowCount(); i++) {
+            patientStates[i] = dataFrame.getValue("STATE", i);
+        }
+        return patientStates;
+    }
+
     // Method to get column names
     public List<String> getColumnNames() {
         return dataFrame.getColumnNames();

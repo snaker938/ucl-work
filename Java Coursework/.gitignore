@@ -194,6 +194,11 @@ hs_err_pid*
 # SFTP configuration file
 sftp-config.json
 
+# Ignore war-file folder and target folder and the tomcat.8080 folder
+*.war
+target/
+tomcat.8080/
+
 # Package control specific files
 Package Control.last-run
 Package Control.ca-list

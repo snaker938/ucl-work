@@ -14,6 +14,10 @@ import java.io.IOException;
 @WebServlet("/editPatient/*")
 public class EditPatientServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+
+
+        ModelFactory.reloadData(); // Ensure the latest data is loaded
+
         // Extract patientID from the URL
         String pathInfo = request.getPathInfo(); // This should be "/{patientID}"
         String patientID = pathInfo.substring(1); // Remove the leading '/'

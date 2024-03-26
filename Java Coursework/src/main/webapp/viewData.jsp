@@ -57,6 +57,11 @@
         color: white;
         font-size: 16px;
     }
+
+    .main table tr:not(:first-child):hover {
+      cursor: pointer;
+    }
+
     tr:nth-child(odd) {background-color: #f9f9f9;}
     tr:nth-child(even) {background-color: #e9e9e9;}
     tr:hover {
@@ -70,6 +75,20 @@
         table, th, td {
             font-size: 12px;
         }
+    }
+
+    .addButton {
+        background-color: #4CAF50; /* Green */
+        border: none;
+        color: white;
+        padding: 10px 24px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 8px;
     }
 </style>
 
@@ -98,6 +117,15 @@
 </div>
 
 <div class="main">
+
+  <!-- Create a paragraph with modern in-line CSS -->
+  <p style="font-size: 20px; text-align: left; margin-bottom: 20px;">To modify a patient's details, click on them.</p>
+  <p style="font-size: 20px; text-align: left; margin-bottom: 20px;">
+    To add a new patient, click here:
+    <button onclick="window.location.href='/addPatient.html';" class="addButton">Add New Patient</button>
+  </p>
+
+
     <h2>Patients:</h2>
     <table>
         <tr>

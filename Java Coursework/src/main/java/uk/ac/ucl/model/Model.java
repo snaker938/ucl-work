@@ -10,9 +10,18 @@ public class Model {
         this.dataFrame = new DataFrame();
     }
 
-    public void loadData(String filePath) throws IOException {
+    public void reloadData() throws IOException {
+        loadData(); // Simply re-call loadData to refresh data from the file
+    }
+
+    public void loadData() throws IOException {
         DataLoader dataLoader = new DataLoader();
-        this.dataFrame = dataLoader.loadDataFromFile(filePath);
+        this.dataFrame = dataLoader.loadDataFromFile();
+    }
+
+    // Function to check if an ID exists in the data
+    public boolean checkIfPatientExists(String patientID) {
+        return dataFrame.checkIDExists(patientID);
     }
 
     // Function to get all the patient data into an array in the form {ID,BIRTHDATE,DEATHDATE,SSN,DRIVERS,PASSPORT,PREFIX,FIRST,LAST,SUFFIX,MAIDEN,MARITAL,RACE,ETHNICITY,GENDER,BIRTHPLACE,ADDRESS,CITY,STATE,ZIP}, where each element is a string array.

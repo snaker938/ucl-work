@@ -97,5 +97,15 @@ public class DataFrame {
     
         return patientData;
     }
-    
+
+    // Function to check if an ID exists in the data
+    public boolean checkIDExists(String patientID) {
+        int numRows = getRowCount();
+        for (int rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            if (getValue("ID", rowIndex).equals(patientID)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -11,6 +11,7 @@
       }
       h2 {
         color: #4a4a4a;
+        text-align: center; /* Center align the header */
       }
       form {
         background-color: #fff;
@@ -36,31 +37,42 @@
         border-radius: 4px;
         box-sizing: border-box;
       }
-      input[type='submit'] {
-        background-color: #4a4a4a;
-        color: white;
+      .form-group input[type='text'][readonly] {
+        background-color: #e9e9e9; /* Different background for read-only */
+        font-weight: bold; /* Make the font bold */
+      }
+      input[type='submit'],
+      .cancel-button {
         padding: 10px 20px;
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        margin-right: 10px; /* Spacing between buttons */
+      }
+      input[type='submit'] {
+        background-color: #3a7bd5; /* Darkish blue */
+        color: white;
       }
       input[type='submit']:hover {
-        background-color: #5a5a5a;
+        background-color: #2a5ca8; /* Darker blue on hover */
+      }
+      .cancel-button {
+        background-color: #d9534f; /* Red */
+        color: white;
+      }
+      .cancel-button:hover {
+        background-color: #c9302c; /* Darker red on hover */
       }
     </style>
   </head>
   <body>
     <h2>Edit Patient Details</h2>
     <form action="/updatePatient" method="post">
-      <%-- Assuming patientDetails is available as an array --%> <% String[]
-      details = (String[])request.getAttribute("patientDetails"); %> <%--
-      Generate form fields dynamically for each detail --%>
+      <% String[] details = (String[])request.getAttribute("patientDetails"); %>
       <div class="form-group">
         <label for="id">ID:</label>
         <input type="text" id="id" name="ID" value="<%=details[0]%>" readonly />
       </div>
-      <%-- Repeat for each patient attribute, remember to set the name attribute
-      correctly --%>
       <div class="form-group">
         <label for="birthdate">Birthdate:</label
         ><input
@@ -188,6 +200,13 @@
         ><input type="text" id="zip" name="ZIP" value="<%=details[19]%>" />
       </div>
       <input type="submit" value="Save Changes" />
+      <button
+        type="button"
+        class="cancel-button"
+        onclick="window.location.href='/viewData.html';"
+      >
+        Cancel
+      </button>
     </form>
   </body>
 </html>

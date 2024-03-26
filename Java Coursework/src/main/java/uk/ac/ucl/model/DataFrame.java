@@ -53,4 +53,25 @@ public class DataFrame {
             }
         }
     }
+
+    // // Function getData to get all the patient data into an array in the form {ID,BIRTHDATE,DEATHDATE,SSN,DRIVERS,PASSPORT,PREFIX,FIRST,LAST,SUFFIX,MAIDEN,MARITAL,RACE,ETHNICITY,GENDER,BIRTHPLACE,ADDRESS,CITY,STATE,ZIP}, where each element is a string array.
+    public List<String[]> getData() {
+        List<String[]> allData = new ArrayList<>();
+        int numRows = getRowCount();
+        
+        // Define the expected columns in order
+        String[] expectedColumns = {"ID", "BIRTHDATE", "DEATHDATE", "SSN", "DRIVERS", "PASSPORT", "PREFIX", "FIRST", "LAST", "SUFFIX", "MAIDEN", "MARITAL", "RACE", "ETHNICITY", "GENDER", "BIRTHPLACE", "ADDRESS", "CITY", "STATE", "ZIP"};
+        
+        for (int rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            String[] rowData = new String[expectedColumns.length];
+            for (int colIndex = 0; colIndex < expectedColumns.length; colIndex++) {
+                String columnName = expectedColumns[colIndex];
+                String value = getValue(columnName, rowIndex);
+                rowData[colIndex] = (value != null) ? value : " "; // Replace null values with a blank space
+            }
+            allData.add(rowData);
+        }
+        
+        return allData;
+    }
 }

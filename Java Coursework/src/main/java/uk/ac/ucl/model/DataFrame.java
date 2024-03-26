@@ -74,4 +74,28 @@ public class DataFrame {
         
         return allData;
     }
+
+    // Function to get patient data by ID
+    public String[] getPatientData(String patientID) {
+        int numRows = getRowCount();
+        // Define the expected columns in order, assuming these are all the columns in your patient data.
+        String[] expectedColumns = {"ID", "BIRTHDATE", "DEATHDATE", "SSN", "DRIVERS", "PASSPORT", "PREFIX", "FIRST", "LAST", "SUFFIX", "MAIDEN", "MARITAL", "RACE", "ETHNICITY", "GENDER", "BIRTHPLACE", "ADDRESS", "CITY", "STATE", "ZIP"};
+        String[] patientData = new String[expectedColumns.length]; // Assuming these many columns based on the provided list.
+    
+        for (int rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            // Check if the current row's ID matches the patientID we are looking for
+            if (getValue("ID", rowIndex).equals(patientID)) {
+                // Found the patient, now fetch their data
+                for (int colIndex = 0; colIndex < expectedColumns.length; colIndex++) {
+                    String columnName = expectedColumns[colIndex];
+                    String value = getValue(columnName, rowIndex);
+                    patientData[colIndex] = value != null ? value : " "; // Replace null with a blank space for consistency
+                }
+                break; // Break the loop once the patient data is found
+            }
+        }
+    
+        return patientData;
+    }
+    
 }

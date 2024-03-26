@@ -73,6 +73,23 @@
     }
 </style>
 
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const tableRows = document.querySelectorAll('.main table tr:not(:first-child)'); // Exclude header row
+    tableRows.forEach(row => {
+        row.addEventListener('click', function() {
+            // Directly use the textContent since it's already a string
+            const patientID = this.cells[0].textContent.trim(); // Added trim() to remove any potential whitespace
+
+            const url = "/editPatient/" + patientID
+
+            window.location.href = url;
+        });
+    });
+  });
+</script>
+
+
 </head>
 <body>
 
@@ -117,6 +134,5 @@
         %>
     </table>
 </div>
-
 </body>
 </html>

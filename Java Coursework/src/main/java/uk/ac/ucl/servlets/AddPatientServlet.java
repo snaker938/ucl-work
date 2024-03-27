@@ -23,8 +23,10 @@ public class AddPatientServlet extends HttpServlet {
         Model model = ModelFactory.getModel();
         
         String newPatientID = generateUniquePatientID(model);
+
+        request.setAttribute("isEditingPatient", false);
         
-        String[] patientDetails = new String[]{newPatientID, " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "};
+        String[] patientDetails = new String[]{newPatientID, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""};
 
         request.setAttribute("patientDetails", patientDetails);
         request.getRequestDispatcher("/editPatient.jsp").forward(request, response);

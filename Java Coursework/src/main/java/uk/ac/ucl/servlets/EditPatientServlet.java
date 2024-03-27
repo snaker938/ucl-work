@@ -29,6 +29,8 @@ public class EditPatientServlet extends HttpServlet {
         String[] patientDetails = model.getPatientData(patientID);
         request.setAttribute("patientDetails", patientDetails);
 
+        request.setAttribute("isEditingPatient", true);
+
         // Forward to the JSP page for editing patient details
         ServletContext context = getServletContext();
         RequestDispatcher dispatcher = context.getRequestDispatcher("/editPatient.jsp");

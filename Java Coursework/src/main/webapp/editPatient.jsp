@@ -63,12 +63,35 @@
       .cancel-button:hover {
         background-color: #c9302c; /* Darker red on hover */
       }
+
+      .delete-button {
+        background-color: #d9534f; /* Red */
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold; /* Optional: Makes the text bold */
+      }
+
+      .delete-button:hover {
+        background-color: #c9302c; /* Darker red on hover */
+        color: white; /* Ensures text color stays white on hover */
+      }
+
+      .button-group {
+        display: flex;
+        justify-content: center; /* Center button group */
+        gap: 10px; /* Space between buttons */
+      }
     </style>
   </head>
   <body>
     <h2>Edit Patient Details</h2>
     <form action="/updatePatient" method="post">
       <% String[] details = (String[])request.getAttribute("patientDetails"); %>
+      <% Boolean isEditingPatient =
+      (Boolean)request.getAttribute("isEditingPatient"); %>
       <div class="form-group">
         <label for="id">ID:</label>
         <input type="text" id="id" name="ID" value="<%=details[0]%>" readonly />
@@ -199,14 +222,26 @@
         <label for="zip">ZIP:</label
         ><input type="text" id="zip" name="ZIP" value="<%=details[19]%>" />
       </div>
-      <input type="submit" value="Save Changes" />
-      <button
-        type="button"
-        class="cancel-button"
-        onclick="window.location.href='/viewData.html';"
-      >
-        Cancel
-      </button>
+      <div class="button-group">
+        <input type="submit" value="Save Changes" />
+        <button
+          type="button"
+          class="cancel-button"
+          onclick="window.location.href='/viewData.html';"
+        >
+          Cancel
+        </button>
+
+        <% if(isEditingPatient) { %>
+        <button
+          type="button"
+          class="delete-button"
+          onclick="window.location.href='/deletePatient/<%=details[0]%>';"
+        >
+          Delete Patient
+        </button>
+        <% } %>
+      </div>
     </form>
   </body>
 </html>

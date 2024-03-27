@@ -67,7 +67,7 @@ public class DataFrame {
             for (int colIndex = 0; colIndex < expectedColumns.length; colIndex++) {
                 String columnName = expectedColumns[colIndex];
                 String value = getValue(columnName, rowIndex);
-                rowData[colIndex] = (value != null) ? value : " "; // Replace null values with a blank space
+                rowData[colIndex] = (value != null) ? value : ""; // Replace null values with a blank space
             }
             allData.add(rowData);
         }
@@ -89,7 +89,7 @@ public class DataFrame {
                 for (int colIndex = 0; colIndex < expectedColumns.length; colIndex++) {
                     String columnName = expectedColumns[colIndex];
                     String value = getValue(columnName, rowIndex);
-                    patientData[colIndex] = value != null ? value : " "; // Replace null with a blank space for consistency
+                    patientData[colIndex] = value != null ? value : ""; // Replace null with a blank space for consistency
                 }
                 break; // Break the loop once the patient data is found
             }

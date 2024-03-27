@@ -54,20 +54,17 @@ body {
   background-color: #f0f0f0;
 }
 
-.view-data h2,
-.operations h2 {
+.view-data h2 {
   font-size: 1.5em;
   margin-bottom: 10px;
 }
 
-.view-data p,
-.operations p {
+.view-data p {
   font-size: 1em;
   line-height: 1.2;
 }
 
-.view-data svg,
-.operations svg {
+.view-data svg {
   margin: 20px 0;
   width: 80px;
   height: 80px;

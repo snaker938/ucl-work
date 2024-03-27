@@ -91,3 +91,25 @@ tr:hover {
   cursor: pointer;
   border-radius: 8px;
 }
+
+/* --------- Serching  */
+
+.search-input,
+.search-select,
+.search-button {
+  padding: 8px 10px;
+  margin: 0 5px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.search-button {
+  background-color: #007bff; /* Bootstrap primary blue */
+  color: white;
+  cursor: pointer;
+}
+
+.search-button:hover {
+  background-color: #0056b3; /* Darker blue */
+  color: white;
+}

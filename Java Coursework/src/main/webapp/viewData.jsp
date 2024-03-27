@@ -40,41 +40,71 @@
         To add a new patient, click here:
         <button onclick="window.location.href='/addPatient.html';" class="addButton">Add New Patient</button>
     </p>
-        <h2>Patients:</h2>
-        <table>
-            <tr>
-                <th>ID</th>
-                <th>Birthdate</th>
-                <th>Deathdate</th>
-                <th>SSN</th>
-                <th>Drivers</th>
-                <th>Passport</th>
-                <th>Prefix</th>
-                <th>First</th>
-                <th>Last</th>
-                <th>Suffix</th>
-                <th>Maiden</th>
-                <th>Marital</th>
-                <th>Race</th>
-                <th>Ethnicity</th>
-                <th>Gender</th>
-                <th>Birthplace</th>
-                <th>Address</th>
-                <th>City</th>
-                <th>State</th>
-                <th>ZIP</th>
-            </tr>
-            <%
-                List<String[]> patientData = (List<String[]>) request.getAttribute("patientData");
-                for (String[] patient : patientData) {
-                    %><tr><%
-                    for (int i = 0; i < patient.length; i++) {
-                        %><td><%= patient[i].isEmpty() ? " " : patient[i] %></td><%
-                    }
-                    %></tr><%
+    <p style="font-size: 20px; text-align: left; margin-bottom: 20px;">
+        Search for specific patient:
+        <form action="/searchPatient" method="get" style="display: inline;">
+            <input type="text" name="searchQuery" placeholder="Enter search term" class="search-input">
+            <select name="searchCategory" class="search-select">
+                <option value="ID">ID</option>
+                <option value="Birthdate">Birthdate</option>
+                <option value="Deathdate">Deathdate</option>
+                <option value="SSN">SSN</option>
+                <option value="Drivers">Drivers</option>
+                <option value="Passport">Passport</option>
+                <option value="Prefix">Prefix</option>
+                <option value="First">First</option>
+                <option value="Last">Last</option>
+                <option value="Suffix">Suffix</option>
+                <option value="Maiden">Maiden</option>
+                <option value="Marital">Marital</option>
+                <option value="Race">Race</option>
+                <option value="Ethnicity">Ethnicity</option>
+                <option value="Gender">Gender</option>
+                <option value="Birthplace">Birthplace</option>
+                <option value="Address">Address</option>
+                <option value="City">City</option>
+                <option value="State">State</option>
+                <option value="ZIP">ZIP</option>
+            </select>
+            <input type="submit" value="Search" class="search-button">
+        </form>
+    </p>
+    
+    <h2>Patients:</h2>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Birthdate</th>
+            <th>Deathdate</th>
+            <th>SSN</th>
+            <th>Drivers</th>
+            <th>Passport</th>
+            <th>Prefix</th>
+            <th>First</th>
+            <th>Last</th>
+            <th>Suffix</th>
+            <th>Maiden</th>
+            <th>Marital</th>
+            <th>Race</th>
+            <th>Ethnicity</th>
+            <th>Gender</th>
+            <th>Birthplace</th>
+            <th>Address</th>
+            <th>City</th>
+            <th>State</th>
+            <th>ZIP</th>
+        </tr>
+        <%
+            List<String[]> patientData = (List<String[]>) request.getAttribute("patientData");
+            for (String[] patient : patientData) {
+                %><tr><%
+                for (int i = 0; i < patient.length; i++) {
+                    %><td><%= patient[i].isEmpty() ? " " : patient[i] %></td><%
                 }
-            %>
-        </table>
+                %></tr><%
+            }
+        %>
+    </table>
     </div>
 </body>
 </html>

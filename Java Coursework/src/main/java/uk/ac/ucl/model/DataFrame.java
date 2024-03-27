@@ -108,4 +108,28 @@ public class DataFrame {
         }
         return false;
     }
+
+    // Function to find all patients by a search category and query
+    public List<String[]> searchPatients(String searchCategory, String searchQuery) {
+        List<String[]> searchResults = new ArrayList<>();
+        int numRows = getRowCount();
+
+        
+        // Normalize the search query to lower case for case-insensitive comparison
+        String normalizedSearchQuery = searchQuery.toLowerCase();
+        String normalizedSearchCategory = searchCategory.toUpperCase();
+        
+        for (int rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            String value = getValue(normalizedSearchCategory, rowIndex);
+            if (value != null && value.toLowerCase().contains(normalizedSearchQuery)) {
+                // If the value contains the search query, add the row to the results
+                String[] rowData = new String[columns.size()];
+                for (int colIndex = 0; colIndex < columns.size(); colIndex++) {
+                    rowData[colIndex] = getValue(columns.get(colIndex).getName(), rowIndex);
+                }
+                searchResults.add(rowData);
+            }
+        }
+        return searchResults;
+    }
 }

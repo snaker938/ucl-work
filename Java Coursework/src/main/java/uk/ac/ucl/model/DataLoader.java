@@ -40,13 +40,12 @@ public class DataLoader {
             }
             return dataFrame;
         } catch (IOException e) {
-            // Handle the error here, potentially logging the exception and forwarding to an error page with a modal
             throw new RuntimeException("Error parsing data file", e);
         }
     }
 
     private static String findLatestDataFileName() throws IOException {
-        String directoryPath = "data"; // Adjust this path as necessary for your project structure
+        String directoryPath = "data";
         File dir = new File(directoryPath);
 
         // Ensure the directory exists

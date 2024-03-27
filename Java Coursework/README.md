@@ -1,1 +1,1 @@
-Example Java web application for COMP0004
+Java web application for COMP0004

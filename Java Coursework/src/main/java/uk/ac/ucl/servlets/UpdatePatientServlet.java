@@ -16,7 +16,6 @@ import java.util.List;
 public class UpdatePatientServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Assuming patient details are sent as form parameters with the same names as the CSV columns
         String[] patientDetails = new String[]{
             request.getParameter("ID"),
             request.getParameter("BIRTHDATE"),
@@ -40,7 +39,7 @@ public class UpdatePatientServlet extends HttpServlet {
             request.getParameter("ZIP")
         };
 
-        String baseDir = "data"; // Note the addition of "data"
+        String baseDir = "data";
         File directory = new File(baseDir);
         if (!directory.exists()) directory.mkdirs();
         String newFileName = generateFileName(baseDir);
@@ -48,8 +47,7 @@ public class UpdatePatientServlet extends HttpServlet {
         // Save the data to a new file
         saveData(patientDetails, baseDir + File.separator + newFileName);
 
-        // Redirect to a confirmation page
-        response.sendRedirect("viewData.html"); // Adjust the redirect to match the correct path
+        response.sendRedirect("viewData.html");
     }
 
     private String generateFileName(String baseDir) {

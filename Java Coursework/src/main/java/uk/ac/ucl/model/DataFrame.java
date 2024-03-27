@@ -26,7 +26,7 @@ public class DataFrame {
         if (columns.isEmpty()) {
             return 0;
         }
-        return columns.get(0).getSize(); // Assuming all columns have the same number of rows
+        return columns.get(0).getSize();
     }
 
     public String getValue(String columnName, int row) {
@@ -78,9 +78,9 @@ public class DataFrame {
     // Function to get patient data by ID
     public String[] getPatientData(String patientID) {
         int numRows = getRowCount();
-        // Define the expected columns in order, assuming these are all the columns in your patient data.
+        // Define the expected columns in order
         String[] expectedColumns = {"ID", "BIRTHDATE", "DEATHDATE", "SSN", "DRIVERS", "PASSPORT", "PREFIX", "FIRST", "LAST", "SUFFIX", "MAIDEN", "MARITAL", "RACE", "ETHNICITY", "GENDER", "BIRTHPLACE", "ADDRESS", "CITY", "STATE", "ZIP"};
-        String[] patientData = new String[expectedColumns.length]; // Assuming these many columns based on the provided list.
+        String[] patientData = new String[expectedColumns.length];
     
         for (int rowIndex = 0; rowIndex < numRows; rowIndex++) {
             // Check if the current row's ID matches the patientID we are looking for

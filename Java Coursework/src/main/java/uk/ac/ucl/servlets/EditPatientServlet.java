@@ -25,7 +25,7 @@ public class EditPatientServlet extends HttpServlet {
         // Get the model
         Model model = ModelFactory.getModel();
 
-        // Ideally, fetch the patient data by ID from your model
+
         String[] patientDetails = model.getPatientData(patientID);
         request.setAttribute("patientDetails", patientDetails);
 

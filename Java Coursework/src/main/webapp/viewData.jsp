@@ -34,7 +34,6 @@
 
     <div class="main">
 
-    <!-- Create a paragraph with modern in-line CSS -->
     <p style="font-size: 20px; text-align: left; margin-bottom: 20px;">To modify a patient's details, or remove them, click on them.</p>
     <p style="font-size: 20px; text-align: left; margin-bottom: 20px;">
         To add a new patient, click here:

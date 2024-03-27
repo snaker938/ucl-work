@@ -6,10 +6,10 @@ body {
 
 .designed-by {
   position: absolute;
-  top: 10px; /* Adjust position as needed */
-  right: 10px; /* Adjust position as needed */
+  top: 10px;
+  right: 10px;
   font-size: 0.7em;
-  color: #ccc; /* Light gray color */
+  color: #ccc;
 }
 
 .header {
@@ -20,13 +20,11 @@ body {
 }
 
 .title {
-  /* Styling for h1 tag */
   font-size: 2em;
   margin-bottom: 10px;
 }
 
 .description {
-  /* Styling for p tag */
   font-size: 1em;
   line-height: 1.5;
 }

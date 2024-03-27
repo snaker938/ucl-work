@@ -44,7 +44,7 @@ public class AddPatientServlet extends HttpServlet {
     }
 
     private String generateRandomString(int length, SecureRandom random) {
-        String characters = "0123456789abcdef"; // Use only hexadecimal characters
+        String characters = "0123456789abcdef";
         return random.ints(length, 0, characters.length())
                      .mapToObj(i -> String.valueOf(characters.charAt(i)))
                      .collect(Collectors.joining());

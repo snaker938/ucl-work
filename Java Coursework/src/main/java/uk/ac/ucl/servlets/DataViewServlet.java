@@ -21,12 +21,11 @@ public class DataViewServlet extends HttpServlet
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
   {
 
-    ModelFactory.reloadData(); // Ensure the latest data is loaded
+    ModelFactory.reloadData();
 
     
     // Get the data from the model
     Model model = ModelFactory.getModel();
-
 
 
     // Invoke the getAllPatientData method in the model and get the data

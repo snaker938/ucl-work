@@ -20,6 +20,6 @@ public class JSONWriter {
             jsonArray.put(rowObj);
         }
 
-        return jsonArray.toString(4); // Pretty print with an indent factor of 4
+        return jsonArray.toString(4);
     }
 }

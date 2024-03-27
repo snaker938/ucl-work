@@ -46,7 +46,7 @@ public class Model {
     }
 
 
-    // Method to get column names
+    // Function to get column names
     public List<String> getColumnNames() {
         return dataFrame.getColumnNames();
     }

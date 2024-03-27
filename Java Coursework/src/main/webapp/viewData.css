@@ -79,7 +79,7 @@ tr:hover {
 }
 
 .addButton {
-  background-color: #4caf50; /* Green */
+  background-color: #4caf50;
   border: none;
   color: white;
   padding: 10px 24px;
@@ -104,12 +104,12 @@ tr:hover {
 }
 
 .search-button {
-  background-color: #007bff; /* Bootstrap primary blue */
+  background-color: #007bff;
   color: white;
   cursor: pointer;
 }
 
 .search-button:hover {
-  background-color: #0056b3; /* Darker blue */
+  background-color: #0056b3;
   color: white;
 }

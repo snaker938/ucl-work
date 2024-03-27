@@ -25,8 +25,6 @@ public class SearchPatientServlet extends HttpServlet {
         // Perform the search using searchQuery and searchCategory
         List<String[]> searchResults = model.searchPatients(searchCategory, searchQuery);
 
-
-        // Assuming you have a method in your model to handle the search
         
         request.setAttribute("patientData", searchResults);
 

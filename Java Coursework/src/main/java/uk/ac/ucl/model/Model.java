@@ -19,6 +19,12 @@ public class Model {
         this.dataFrame = dataLoader.loadDataFromFile();
     }
 
+    // Method to get all patient data in JSON format
+    public String getAllPatientDataJson() {
+        // Utilize the JSONWriter class to convert the DataFrame to JSON
+        return JSONWriter.convertDataFrameToJson(dataFrame);
+    }
+     
     // Function to find all patients by a search category and query
     public List<String[]> searchPatients(String searchCategory, String searchQuery) {
         return dataFrame.searchPatients(searchCategory, searchQuery);

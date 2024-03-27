@@ -35,11 +35,20 @@
     <div class="main">
 
     <!-- Create a paragraph with modern in-line CSS -->
-    <p style="font-size: 20px; text-align: left; margin-bottom: 20px;">To modify a patient's details, click on them.</p>
+    <p style="font-size: 20px; text-align: left; margin-bottom: 20px;">To modify a patient's details, or remove them, click on them.</p>
     <p style="font-size: 20px; text-align: left; margin-bottom: 20px;">
         To add a new patient, click here:
         <button onclick="window.location.href='/addPatient.html';" class="addButton">Add New Patient</button>
     </p>
+    <div style="font-size: 20px; text-align: left; margin-bottom: 20px; display: flex; align-items: center;">
+        <span style="margin-right: 10px;">To save the patient data to a JSON file, click here:</span>
+        <form action="${pageContext.request.contextPath}/saveToJson" method="post" style="margin: 0;">
+            <input type="submit" value="Save to JSON" style="background-color: #d17a61; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer;"/>
+        </form>
+    </div>
+    
+    
+    
     <p style="font-size: 20px; text-align: left; margin-bottom: 20px;">
         Search for specific patient:
         <form action="/searchPatient" method="get" style="display: inline;">
@@ -69,8 +78,7 @@
             <input type="submit" value="Search" class="search-button">
         </form>
     </p>
-    
-    <h2>Patients:</h2>
+
     <table>
         <tr>
             <th>ID</th>

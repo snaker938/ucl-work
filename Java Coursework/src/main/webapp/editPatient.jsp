@@ -1,9 +1,94 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.List" %> <%@ page
+contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Edit Patient</title>
-    <link rel="stylesheet" href="editPatient.css" />
-    <style></style>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f2f2f2;
+        color: #333;
+        padding: 20px;
+      }
+      h2 {
+        color: #4a4a4a;
+        text-align: center;
+      }
+      form {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        max-width: 800px;
+        margin: 20px auto;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      .form-group input[type='text'],
+      .form-group input[type='date'],
+      .form-group input[type='email'] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      .form-group input[type='text'][readonly] {
+        background-color: #e9e9e9;
+        /font-weight: bold;
+      }
+      input[type='submit'],
+      .cancel-button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+      input[type='submit'] {
+        background-color: #3a7bd5;
+        color: white;
+      }
+      input[type='submit']:hover {
+        background-color: #2a5ca8;
+      }
+      .cancel-button {
+        background-color: #d9534f;
+        color: white;
+      }
+      .cancel-button:hover {
+        background-color: #c9302c;
+      }
+
+      .delete-button {
+        background-color: #d9534f;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      .delete-button:hover {
+        background-color: #c9302c;
+        color: white;
+      }
+
+      .button-group {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+    </style>
   </head>
   <body>
     <h2>Edit Patient Details</h2>
@@ -164,4 +249,3 @@
     </form>
   </body>
 </html>
-```

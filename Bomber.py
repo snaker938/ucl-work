@@ -10,11 +10,7 @@ CANVAS_HEIGHT = 700
 SPACING = 100
 speed = 0.0
 
-msg_text = None
-msg_text2 = None
-
 has_plane_landed = False
-
 
 ''' update_position takes a list of x and y coordinates and pair of offsets.
     It creates a new list of x and y coordintes by adding the offsets to all
@@ -282,6 +278,7 @@ def plane_landed(canvas):
     global game_running, won, score, level, msg_text, msg_text2, bigfont, scorefont, msg_text_on, has_plane_landed
     if has_plane_landed: return
     has_plane_landed = True
+    
     game_running = False
     won = True
     score = score + 1000
@@ -293,12 +290,11 @@ def plane_landed(canvas):
     canvas.itemconfig(msg_text2, text="Press n for next level.", font=scorefont)
 
 ''' restart is called after game over to start a new game '''
-def restart(canvas, plane_pos, building_heights, building_xpos, building_rects):
+def restart(canvas, plane_pos, building_heights,
+            building_xpos, building_rects):
     global building_width, won, game_running, msg_text, msg_text2, msg_text_on
-    if msg_text_on:
+    if msg_text_on == True:
         canvas.delete(msg_text)
-        if msg_text2:
-            canvas.delete(msg_text2)
         msg_text_on = False
     level = 1
     score = 0
@@ -310,14 +306,15 @@ def restart(canvas, plane_pos, building_heights, building_xpos, building_rects):
     game_running = True
     return (score, level)
 
-def next_level(canvas, level, plane_pos, building_heights, building_xpos, building_rects):
+def next_level(canvas, level, plane_pos,
+               building_heights, building_xpos, building_rects):
     global building_width, won, game_running, msg_text, msg_text2, msg_text_on, has_plane_landed
+    #don't move to next level unless we've actually won!
     if won == False:
         return level
-    if msg_text_on:
+    if msg_text_on == True:
         canvas.delete(msg_text)
-        if msg_text2:
-            canvas.delete(msg_text2)
+        canvas.delete(msg_text2)
         msg_text_on = False
     level = level + 1
     reset_plane_position(plane_pos)

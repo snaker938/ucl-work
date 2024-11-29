@@ -73,103 +73,114 @@ def rhs(fmla):
         return ''
 
 def theory(fmla):
-    return [{'formulas': [parse_tree(fmla)], 'constants': [], 'closed': False}]
+    return {'formulas': [parse_tree(fmla)], 'constants': [], 'closed': False}
+
+def copy_formula(formula):
+    if formula is None:
+        return None
+    new_formula = {}
+    for key, value in formula.items():
+        if key in ('sub', 'left', 'right'):
+            new_formula[key] = copy_formula(value)
+        else:
+            new_formula[key] = value
+    return new_formula
+
+def copy_branch(branch):
+    return {
+        'formulas': [copy_formula(f) for f in branch['formulas']],
+        'constants': branch['constants'][:],
+        'closed': branch['closed'],
+    }
 
 def sat(tableau):
     while tableau:
         branch = tableau.pop()
         if branch['closed']:
             continue
-        if not branch['formulas']:
-            return 1  # satisfiable
-        formula = branch['formulas'].pop(0)
-        if formula.get('processed', False):
-            continue
-        formula['processed'] = True
-        typ = formula['type']
-        if typ == 'prop':
-            name = formula['name']
-            if name in branch:
+        while branch['formulas']:
+            formula = branch['formulas'].pop(0)
+            if formula.get('processed', False):
                 continue
-            elif ('~' + name) in branch:
-                branch['closed'] = True
-                continue
-            else:
-                branch[name] = True
-        elif typ == 'negation':
-            sub = formula['sub']
-            if sub['type'] == 'prop':
-                name = '~' + sub['name']
+            formula['processed'] = True
+            typ = formula['type']
+            if typ == 'prop':
+                name = formula['name']
                 if name in branch:
                     continue
-                elif sub['name'] in branch:
+                elif ('~' + name) in branch:
                     branch['closed'] = True
-                    continue
+                    break
                 else:
                     branch[name] = True
-            else:
-                new_formula = negate(sub)
-                branch['formulas'].insert(0, new_formula)
-        elif typ == 'binary':
-            conn = formula['conn']
-            left = formula['left']
-            right = formula['right']
-            if conn == '/\\':
-                branch['formulas'].insert(0, right)
-                branch['formulas'].insert(0, left)
-            elif conn == '\\/':
-                # Create two new branches for the disjunction
-                left_branch = {
-                    'formulas': branch['formulas'][:],
-                    'constants': branch['constants'][:],
-                    'closed': branch['closed']
-                }
-                right_branch = {
-                    'formulas': branch['formulas'][:],
-                    'constants': branch['constants'][:],
-                    'closed': branch['closed']
-                }
-                left_branch['formulas'].insert(0, left)
-                right_branch['formulas'].insert(0, right)
-                tableau.append(left_branch)
-                tableau.append(right_branch)
-                continue  # Skip appending the original branch
-            elif conn == '=>':
-                new_formula = negate(left)
-                branch['formulas'].insert(0, right)
-                branch['formulas'].insert(0, new_formula)
-        elif typ == 'quantifier':
-            if formula['quant'] == 'E':
-                if len(branch['constants']) >= MAX_CONSTANTS:
-                    return 2  # may or may not be satisfiable
-                new_const = 'c' + str(len(branch['constants']) + 1)
-                branch['constants'].append(new_const)
-                new_formula = substitute(formula['sub'], formula['var'], new_const)
-                branch['formulas'].insert(0, new_formula)
-            elif formula['quant'] == 'A':
-                if not branch['constants']:
+            elif typ == 'negation':
+                sub = formula['sub']
+                if sub['type'] == 'prop':
+                    name = '~' + sub['name']
+                    if name in branch:
+                        continue
+                    elif sub['name'] in branch:
+                        branch['closed'] = True
+                        break
+                    else:
+                        branch[name] = True
+                else:
+                    new_formula = negate(sub)
+                    branch['formulas'].insert(0, new_formula)
+            elif typ == 'binary':
+                conn = formula['conn']
+                left = formula['left']
+                right = formula['right']
+                if conn == '/\\':
+                    branch['formulas'].insert(0, right)
+                    branch['formulas'].insert(0, left)
+                elif conn == '\\/':
+                    left_branch = copy_branch(branch)
+                    right_branch = copy_branch(branch)
+                    left_branch['formulas'].insert(0, left)
+                    right_branch['formulas'].insert(0, right)
+                    tableau.append(left_branch)
+                    tableau.append(right_branch)
+                    break
+                elif conn == '=>':
+                    new_formula = negate(left)
+                    branch['formulas'].insert(0, right)
+                    branch['formulas'].insert(0, new_formula)
+            elif typ == 'quantifier':
+                if formula['quant'] == 'E':
                     if len(branch['constants']) >= MAX_CONSTANTS:
-                        return 2  # may or may not be satisfiable
+                        return 2
                     new_const = 'c' + str(len(branch['constants']) + 1)
                     branch['constants'].append(new_const)
-                new_formulas = []
-                for const in branch['constants']:
-                    new_formula = substitute(formula['sub'], formula['var'], const)
-                    new_formulas.append(new_formula)
-                branch['formulas'] = new_formulas + branch['formulas']
-        elif typ == 'atom':
-            atom_str = to_string(formula)
-            if atom_str in branch:
-                continue
-            elif ('~' + atom_str) in branch:
-                branch['closed'] = True
-                continue
+                    new_formula = substitute(formula['sub'], formula['var'], new_const)
+                    branch['formulas'].insert(0, new_formula)
+                elif formula['quant'] == 'A':
+                    if not branch['constants']:
+                        if len(branch['constants']) >= MAX_CONSTANTS:
+                            return 2
+                        new_const = 'c' + str(len(branch['constants']) + 1)
+                        branch['constants'].append(new_const)
+                    new_formulas = []
+                    for const in branch['constants']:
+                        new_formula = substitute(formula['sub'], formula['var'], const)
+                        new_formulas.append(new_formula)
+                    branch['formulas'] = new_formulas + branch['formulas']
+            elif typ == 'atom':
+                atom_str = to_string(formula)
+                if atom_str in branch:
+                    continue
+                elif ('~' + atom_str) in branch:
+                    branch['closed'] = True
+                    break
+                else:
+                    branch[atom_str] = True
             else:
-                branch[atom_str] = True
+                continue
         else:
-            continue
-        tableau.append(branch)
-    return 0  # not satisfiable
+            return 1
+        if not branch['closed']:
+            tableau.append(branch)
+    return 0
 
 def tokenize(s):
     s = s.replace('(', ' ( ').replace(')', ' ) ').replace('~', ' ~ ').replace('/\\', ' /\\ ').replace('\\/', ' \\/ ').replace('=>', ' => ').replace('=', ' = ').replace('E', 'E ').replace('A', 'A ').replace(',', ' , ')
@@ -272,7 +283,7 @@ def negate(node):
 def substitute(node, var, const):
     if node['type'] == 'atom':
         args = [const if arg == var else arg for arg in node['args']]
-        return {'type': 'atom', 'pred': node['pred'], 'args': args, 'logic': 'FOL', 'processed': False}
+        return {'type': 'atom', 'pred': node['pred'], 'args': args, 'logic': node['logic'], 'processed': False}
     elif node['type'] == 'negation':
         sub = substitute(node['sub'], var, const)
         return {'type': 'negation', 'sub': sub, 'logic': node['logic'], 'processed': False}

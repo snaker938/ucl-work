@@ -83,22 +83,33 @@ def sat(tableau):
         if not branch['formulas']:
             return 1  # satisfiable
         formula = branch['formulas'].pop(0)
-        if formula['processed']:
+        if formula.get('processed', False):
             continue
         formula['processed'] = True
         typ = formula['type']
         if typ == 'prop':
-            if formula['name'] in branch:
+            name = formula['name']
+            if name in branch:
                 continue
-            elif ('~' + formula['name']) in branch:
+            elif ('~' + name) in branch:
                 branch['closed'] = True
                 continue
             else:
-                branch[formula['name']] = True
+                branch[name] = True
         elif typ == 'negation':
             sub = formula['sub']
-            new_formula = negate(sub)
-            branch['formulas'].insert(0, new_formula)
+            if sub['type'] == 'prop':
+                name = '~' + sub['name']
+                if name in branch:
+                    continue
+                elif sub['name'] in branch:
+                    branch['closed'] = True
+                    continue
+                else:
+                    branch[name] = True
+            else:
+                new_formula = negate(sub)
+                branch['formulas'].insert(0, new_formula)
         elif typ == 'binary':
             conn = formula['conn']
             left = formula['left']
@@ -108,9 +119,11 @@ def sat(tableau):
                 branch['formulas'].insert(0, right)
             elif conn == '\\/':
                 new_branch = branch.copy()
-                branch['formulas'].insert(0, left)
                 new_branch['formulas'] = branch['formulas'][:]
-                new_branch['formulas'][0] = right
+                new_branch['constants'] = branch['constants'][:]
+                new_branch['closed'] = branch['closed']
+                branch['formulas'].insert(0, left)
+                new_branch['formulas'].insert(0, right)
                 tableau.append(new_branch)
             elif conn == '=>':
                 branch['formulas'].insert(0, negate(left))
@@ -119,20 +132,18 @@ def sat(tableau):
             if formula['quant'] == 'E':
                 if len(branch['constants']) >= MAX_CONSTANTS:
                     return 2  # may or may not be satisfiable
-                new_const = 'c' + str(len(branch['constants']))
+                new_const = 'c' + str(len(branch['constants']) + 1)
                 branch['constants'].append(new_const)
                 new_formula = substitute(formula['sub'], formula['var'], new_const)
                 branch['formulas'].insert(0, new_formula)
             elif formula['quant'] == 'A':
-                for const in branch['constants']:
-                    new_formula = substitute(formula['sub'], formula['var'], const)
-                    branch['formulas'].insert(0, new_formula)
                 if not branch['constants']:
                     if len(branch['constants']) >= MAX_CONSTANTS:
                         return 2  # may or may not be satisfiable
-                    new_const = 'c' + str(len(branch['constants']))
+                    new_const = 'c' + str(len(branch['constants']) + 1)
                     branch['constants'].append(new_const)
-                    new_formula = substitute(formula['sub'], formula['var'], new_const)
+                for const in branch['constants']:
+                    new_formula = substitute(formula['sub'], formula['var'], const)
                     branch['formulas'].insert(0, new_formula)
         elif typ == 'atom':
             atom_str = to_string(formula)
@@ -149,7 +160,7 @@ def sat(tableau):
     return 0  # not satisfiable
 
 def tokenize(s):
-    s = s.replace('(', ' ( ').replace(')', ' ) ').replace('~', ' ~ ').replace('/\\', ' /\\ ').replace('\\/', ' \\/ ').replace('=>', ' => ').replace('=', ' = ').replace('E', 'E ').replace('A', 'A ')
+    s = s.replace('(', ' ( ').replace(')', ' ) ').replace('~', ' ~ ').replace('/\\', ' /\\ ').replace('\\/', ' \\/ ').replace('=>', ' => ').replace('=', ' = ').replace('E', 'E ').replace('A', 'A ').replace(',', ' , ')
     return s.split()
 
 def parse_FMLA():
@@ -191,16 +202,18 @@ def parse_FMLA():
         if index >= len(tokens) or tokens[index] != '(':
             raise Exception('Expected (')
         index += 1
-        if index + 1 >= len(tokens):
-            raise Exception('Expected variables')
+        if index >= len(tokens):
+            raise Exception('Expected variable')
         var1 = tokens[index]
         index += 1
-        if tokens[index] != ',':
+        if index >= len(tokens) or tokens[index] != ',':
             raise Exception('Expected ,')
         index += 1
+        if index >= len(tokens):
+            raise Exception('Expected variable')
         var2 = tokens[index]
         index += 1
-        if tokens[index] != ')':
+        if index >= len(tokens) or tokens[index] != ')':
             raise Exception('Expected )')
         index += 1
         return {'type': 'atom', 'pred': pred, 'args': [var1, var2], 'logic': 'FOL'}
@@ -254,7 +267,7 @@ def substitute(node, var, const):
     elif node['type'] == 'binary':
         left = substitute(node['left'], var, const)
         right = substitute(node['right'], var, const)
-        return {'type': 'binary', 'conn': node['conn'], 'left': left, 'right': right, 'logic': 'FOL', 'processed': False}
+        return {'type': 'binary', 'conn': node['conn'], 'left': left, 'right': right, 'logic': node['logic'], 'processed': False}
     elif node['type'] == 'quantifier':
         if node['var'] == var:
             return node

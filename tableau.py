@@ -176,14 +176,14 @@ def sat(tableau):
                     branch[atom_str] = True
             else:
                 continue
-        else:
-            return 1
-        if not branch['closed']:
+        if not branch['closed'] and not branch['formulas']:
+            return 1  # Satisfiable
+        elif not branch['closed']:
             tableau.append(branch)
-    return 0
+    return 0  # Not satisfiable
 
 def tokenize(s):
-    s = s.replace('(', ' ( ').replace(')', ' ) ').replace('~', ' ~ ').replace('/\\', ' /\\ ').replace('\\/', ' \\/ ').replace('=>', ' => ').replace('=', ' = ').replace('E', 'E ').replace('A', 'A ').replace(',', ' , ')
+    s = s.replace('(', ' ( ').replace(')', ' ) ').replace('~', ' ~ ').replace('/\\', ' /\\ ').replace('\\/', ' \\/ ').replace('=>', ' => ').replace('E', 'E ').replace('A', 'A ').replace(',', ' , ')
     return s.split()
 
 def parse_FMLA():
@@ -317,6 +317,7 @@ parseOutputs = ['not a formula',
                 'a binary connective propositional formula']
 
 satOutput = ['is not satisfiable', 'is satisfiable', 'may or may not be satisfiable']
+
 
 
 firstline = f.readline()

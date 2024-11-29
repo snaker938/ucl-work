@@ -1,17 +1,1 @@
-~(p=>(q=>p)) is not a formula.
-~(p=>(q=>p)) is not a formula.
-(~(p=>q)/\q) is not a formula.
-(~(p=>q)/\q) is not a formula.
-(~~~p\/(q/\~q)) is a binary connective propositional formula. Its left hand side is ~~~p, its connective is \/, and its right hand side is (q/\~q).
-(~~~p\/(q/\~q)) is satisfiable.
-(p=>p) is not a formula.
-(p=>p) is not a formula.
-~(p=>p) is not a formula.
-~(p=>p) is not a formula.
-((p\/q)/\ is not a formula.
-((p\/q)/\ is not a formula.
-(p~q) is not a formula.
-(p~q) is not a formula.
-((p\/q)/\(~p\/~q)) is a binary connective propositional formula. Its left hand side is (p\/q), its connective is /\, and its right hand side is (~p\/~q).
-((p\/q)/\(~p\/~q)) is satisfiable.
-(q/\~(p\/~p)) is a binary connective propositional formula. Its left hand side is q, its connective is /\, and its right hand side is ~(p\/~p).
+~(p=>(q=>p)) is a negation of a propositional formula.

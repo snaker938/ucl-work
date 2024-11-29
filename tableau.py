@@ -115,19 +115,29 @@ def sat(tableau):
             left = formula['left']
             right = formula['right']
             if conn == '/\\':
-                branch['formulas'].insert(0, left)
                 branch['formulas'].insert(0, right)
+                branch['formulas'].insert(0, left)
             elif conn == '\\/':
-                new_branch = branch.copy()
-                new_branch['formulas'] = branch['formulas'][:]
-                new_branch['constants'] = branch['constants'][:]
-                new_branch['closed'] = branch['closed']
-                branch['formulas'].insert(0, left)
-                new_branch['formulas'].insert(0, right)
-                tableau.append(new_branch)
+                # Create two new branches for the disjunction
+                left_branch = {
+                    'formulas': branch['formulas'][:],
+                    'constants': branch['constants'][:],
+                    'closed': branch['closed']
+                }
+                right_branch = {
+                    'formulas': branch['formulas'][:],
+                    'constants': branch['constants'][:],
+                    'closed': branch['closed']
+                }
+                left_branch['formulas'].insert(0, left)
+                right_branch['formulas'].insert(0, right)
+                tableau.append(left_branch)
+                tableau.append(right_branch)
+                continue  # Skip appending the original branch
             elif conn == '=>':
-                branch['formulas'].insert(0, negate(left))
+                new_formula = negate(left)
                 branch['formulas'].insert(0, right)
+                branch['formulas'].insert(0, new_formula)
         elif typ == 'quantifier':
             if formula['quant'] == 'E':
                 if len(branch['constants']) >= MAX_CONSTANTS:
@@ -142,9 +152,11 @@ def sat(tableau):
                         return 2  # may or may not be satisfiable
                     new_const = 'c' + str(len(branch['constants']) + 1)
                     branch['constants'].append(new_const)
+                new_formulas = []
                 for const in branch['constants']:
                     new_formula = substitute(formula['sub'], formula['var'], const)
-                    branch['formulas'].insert(0, new_formula)
+                    new_formulas.append(new_formula)
+                branch['formulas'] = new_formulas + branch['formulas']
         elif typ == 'atom':
             atom_str = to_string(formula)
             if atom_str in branch:
@@ -263,7 +275,7 @@ def substitute(node, var, const):
         return {'type': 'atom', 'pred': node['pred'], 'args': args, 'logic': 'FOL', 'processed': False}
     elif node['type'] == 'negation':
         sub = substitute(node['sub'], var, const)
-        return {'type': 'negation', 'sub': sub, 'logic': 'FOL', 'processed': False}
+        return {'type': 'negation', 'sub': sub, 'logic': node['logic'], 'processed': False}
     elif node['type'] == 'binary':
         left = substitute(node['left'], var, const)
         right = substitute(node['right'], var, const)
@@ -273,7 +285,7 @@ def substitute(node, var, const):
             return node
         else:
             sub = substitute(node['sub'], var, const)
-            return {'type': 'quantifier', 'quant': node['quant'], 'var': node['var'], 'sub': sub, 'logic': 'FOL', 'processed': False}
+            return {'type': 'quantifier', 'quant': node['quant'], 'var': node['var'], 'sub': sub, 'logic': node['logic'], 'processed': False}
     else:
         return node
 

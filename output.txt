@@ -1,5 +1,0 @@
-~(p=>(q=>p)) is not a formula.
-~(p=>(q=>p)) is not a formula.
-(~(p=>q)/\q) is not a formula.
-(~(p=>q)/\q) is not a formula.
-(~~~p\/(q/\~q)) is a binary connective propositional formula. Its left hand side is ~~~p, its connective is \/, and its right hand side is (q/\~q).

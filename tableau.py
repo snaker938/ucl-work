@@ -183,16 +183,21 @@ def theory(fmla):
     return [fmla]
 
 def sat(tableau):
-    # Output 0 if not satisfiable, 1 if satisfiable, 2 if constants exceed MAX_CONSTANTS
-    MAX_CONSTANTS = 10  # Maximum allowed constants
+    MAX_CONSTANTS = 10
 
-    # Helper functions within sat
     def substitute(fmla, var, const):
-        # Substitute variable with constant in formula
-        return fmla.replace(var, const)
+        result = ''
+        i = 0
+        while i < len(fmla):
+            if fmla[i] == var and (i == 0 or not fmla[i-1].isalnum()) and (i+1 == len(fmla) or not fmla[i+1].isalnum()):
+                result += const
+                i += 1
+            else:
+                result += fmla[i]
+                i += 1
+        return result
 
     def simplify(f):
-        # Simplify multiple negations and remove redundant parentheses
         f = f.strip()
         while f.startswith('~(') and f.endswith(')'):
             f = f[1:-1].strip()
@@ -205,7 +210,6 @@ def sat(tableau):
         return f
 
     def flatten(lst):
-        # Flatten a nested list
         flat_list = []
         for item in lst:
             if isinstance(item, list):
@@ -214,138 +218,114 @@ def sat(tableau):
                 flat_list.append(item)
         return flat_list
 
-    # Initialize the stack with the initial state
+    stack = []
     initial_formulas = flatten(tableau)
     initial_formulas = [simplify(f) for f in initial_formulas]
-    stack = [ (initial_formulas, [], set()) ]  # Each element is (formulas, constants, processed)
+    stack.append((initial_formulas, [], set(), 0))
 
     while stack:
-        formulas, constants, processed = stack.pop()
-        index = 0
+        formulas, constants, processed, constants_count = stack.pop()
         formulas = formulas.copy()
-        processed = processed.copy()
         constants = constants.copy()
-
+        processed = processed.copy()
+        index = 0
         while index < len(formulas):
             f = simplify(formulas[index])
             index += 1
+
             if f in processed:
                 continue
             processed.add(f)
 
-            # Check for closure (contradiction)
             if ('~' + f) in processed or ('~' + f) in formulas[index:]:
-                break  # Move to the next branch
+                break
             if f.startswith('~') and f[1:] in processed:
                 break
 
             parsed_type = parse(f)
             if parsed_type == 0:
-                break  # Invalid formula
+                break
 
-            if parsed_type in [1, 6]:  # Atom or proposition
-                continue  # Nothing to expand
+            if parsed_type in [1, 6]:
+                continue
 
-            elif parsed_type in [2, 7]:  # Negation
-                sub_f = simplify(f[1:].strip())
+            elif parsed_type in [2, 7]:
+                sub_f = simplify(f[1:])
                 sub_parsed_type = parse(sub_f)
-                if sub_parsed_type == 0:
-                    break  # Invalid formula
                 if sub_parsed_type in [1, 6]:
-                    if sub_f in processed:
-                        break  # Contradiction
-                    else:
-                        continue
-                elif sub_parsed_type in [5, 8]:  # Binary connective
+                    continue
+                elif sub_parsed_type in [5, 8]:
                     lhs_f = lhs(sub_f)
                     rhs_f = rhs(sub_f)
                     conn = con(sub_f)
                     if conn == '/\\':
-                        # ~ (A /\ B) => ~A \/ ~B (branch)
-                        # Option 1: ~A
-                        stack.append(( [simplify('~' + lhs_f)] + formulas[index:], constants.copy(), processed.copy()))
-                        # Option 2: ~B
-                        stack.append(( [simplify('~' + rhs_f)] + formulas[index:], constants.copy(), processed.copy()))
-                        break  # Branching complete
+                        stack.append(([simplify('~' + lhs_f)] + formulas[index:], constants.copy(), processed.copy(), constants_count))
+                        stack.append(([simplify('~' + rhs_f)] + formulas[index:], constants.copy(), processed.copy(), constants_count))
+                        break
                     elif conn == '\\/':
-                        # ~ (A \/ B) => ~A /\ ~B
                         formulas.extend([simplify('~' + lhs_f), simplify('~' + rhs_f)])
                     elif conn == '=>':
-                        # ~ (A => B) => A /\ ~B
                         formulas.extend([lhs_f, simplify('~' + rhs_f)])
-                    else:
-                        break  # Unknown connective
-                elif sub_parsed_type == 3:  # Universal quantifier
+                elif sub_parsed_type == 3:
                     var = sub_f[1]
                     sub_sub_f = sub_f[2:].strip()
-                    new_formula = simplify('E' + var + '~' + sub_sub_f)
-                    formulas.append(new_formula)
-                elif sub_parsed_type == 4:  # Existential quantifier
+                    new_formula = 'E' + var + '~' + sub_sub_f
+                    formulas.append(simplify(new_formula))
+                elif sub_parsed_type == 4:
                     var = sub_f[1]
                     sub_sub_f = sub_f[2:].strip()
-                    new_formula = simplify('A' + var + '~' + sub_sub_f)
-                    formulas.append(new_formula)
+                    new_formula = 'A' + var + '~' + sub_sub_f
+                    formulas.append(simplify(new_formula))
                 else:
-                    break  # Not derivable
+                    break
 
-            elif parsed_type in [5, 8]:  # Binary connective
+            elif parsed_type in [5, 8]:
                 lhs_f = lhs(f)
                 rhs_f = rhs(f)
                 conn = con(f)
                 if conn == '/\\':
-                    # A /\ B
                     formulas.extend([lhs_f, rhs_f])
                 elif conn == '\\/':
-                    # A \/ B (branch)
-                    # Option 1: A
-                    stack.append(( [lhs_f] + formulas[index:], constants.copy(), processed.copy()))
-                    # Option 2: B
-                    stack.append(( [rhs_f] + formulas[index:], constants.copy(), processed.copy()))
+                    stack.append(([lhs_f] + formulas[index:], constants.copy(), processed.copy(), constants_count))
+                    stack.append(([rhs_f] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                     break
                 elif conn == '=>':
-                    # A => B equivalent to ~A \/ B
-                    # Option 1: ~A
-                    stack.append(( [simplify('~' + lhs_f)] + formulas[index:], constants.copy(), processed.copy()))
-                    # Option 2: B
-                    stack.append(( [rhs_f] + formulas[index:], constants.copy(), processed.copy()))
+                    stack.append(([simplify('~' + lhs_f)] + formulas[index:], constants.copy(), processed.copy(), constants_count))
+                    stack.append(([rhs_f] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                     break
-                else:
-                    break  # Unknown connective
 
-            elif parsed_type == 3:  # Universal quantifier
+            elif parsed_type == 3:
                 var = f[1]
                 sub_f = f[2:].strip()
-                # Instantiate with existing constants
                 if not constants:
-                    # Introduce a new constant
-                    if len(constants) >= MAX_CONSTANTS:
-                        return 2  # Undetermined
-                    new_const = 'c' + str(len(constants) + 1)
+                    if constants_count >= MAX_CONSTANTS:
+                        return 2
+                    new_const = 'c' + str(constants_count + 1)
                     constants.append(new_const)
+                    constants_count += 1
                 for c in constants:
                     instantiated_f = simplify(substitute(sub_f, var, c))
                     if instantiated_f not in processed:
                         formulas.append(instantiated_f)
+                formulas.append(f)
 
-            elif parsed_type == 4:  # Existential quantifier
+            elif parsed_type == 4:
                 var = f[1]
                 sub_f = f[2:].strip()
-                # Introduce a new constant
-                if len(constants) >= MAX_CONSTANTS:
-                    return 2  # Undetermined
-                new_const = 'c' + str(len(constants) + 1)
+                if constants_count >= MAX_CONSTANTS:
+                    return 2
+                new_const = 'c' + str(constants_count + 1)
                 constants.append(new_const)
+                constants_count += 1
                 instantiated_f = simplify(substitute(sub_f, var, new_const))
                 if instantiated_f not in processed:
                     formulas.append(instantiated_f)
             else:
-                continue  # Cannot expand further
-
+                continue
         else:
-            # No contradictions found; satisfiable
+            if constants_count >= MAX_CONSTANTS:
+                return 2
             return 1
-
-    # All branches closed; not satisfiable
     return 0
 
 #------------------------------------------------------------------------------------------------------------------------------:

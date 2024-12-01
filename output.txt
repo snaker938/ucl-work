@@ -46,4 +46,3 @@ Ex~P(x,x) is not satisfiable.
 (Ax(P(x,x)/\~P(x,x))/\ExQ(x,x)) is not satisfiable.
 ExEy(P(x,y)/\Ex~P(x,y)) is an existentially quantified formula.
 ExEy(P(x,y)/\Ex~P(x,y)) is not satisfiable.
-

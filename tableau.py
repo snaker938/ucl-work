@@ -184,46 +184,69 @@ def sat(tableau):
     # Output 0 if not satisfiable, 1 if satisfiable, 2 if constants exceed MAX_CONSTANTS
     constants = []
     processed = set()  # Track processed formulas
-    
+
     # Helper function to substitute variable with constant
     def substitute(fmla, var, const):
         return fmla.replace(var, const)
-    
-    # Flatten the formulas list
-    def flatten_formulas(lst):
+
+    # Helper function to simplify multiple negations
+    def simplify(f):
+        f = f.strip()
+        neg_count = 0
+        while f.startswith('~'):
+            neg_count += 1
+            f = f[1:].strip()
+        simplified_f = f
+        if neg_count % 2 == 1:
+            simplified_f = '~' + f
+        return simplified_f
+
+    # Helper function to flatten the tableau list
+    def flatten(lst):
         flat_list = []
         for item in lst:
             if isinstance(item, list):
-                flat_list.extend(flatten_formulas(item))
+                flat_list.extend(flatten(item))
             else:
                 flat_list.append(item)
         return flat_list
 
-    formulas = flatten_formulas(tableau.copy())  # Ensure formulas is a flat list of strings
+    # Flatten the tableau into a list of formulas
+    formulas = flatten(tableau)
+    formulas = [simplify(f) for f in formulas]
 
     while formulas:
         f = formulas.pop(0)
+        f = simplify(f)
         if f in processed:
             continue
         processed.add(f)
 
+        # Simplify the negation of f
+        f_neg = simplify('~' + f)
+
         # Check for closure
-        if ('~' + f) in processed or ('~' + f) in formulas:
-            return 0  # Not satisfiable
-        if f.startswith('~') and f[1:] in processed:
+        if f_neg in processed:
             return 0  # Not satisfiable
 
-        # Expand the formula
         parsed_type = parse(f)
+        if parsed_type == 0:
+            return 0  # Not a formula
+
         if parsed_type in [1, 6]:  # Atom or proposition
             continue  # Nothing to expand
+
         elif parsed_type in [2, 7]:  # Negation
             sub_f = f[1:].strip()
+            sub_f = simplify(sub_f)
             sub_parsed_type = parse(sub_f)
             if sub_parsed_type == 0:
                 return 0  # Not a formula
             if sub_parsed_type in [1, 6]:  # Negation of an atom or proposition
-                continue  # Can't expand further
+                if sub_f in processed:
+                    return 0  # Contradiction
+                processed.add(f)
+                continue
             else:
                 # Apply De Morgan's laws or quantifier negation
                 if sub_parsed_type in [5, 8]:  # Binary connective
@@ -232,61 +255,81 @@ def sat(tableau):
                     conn = con(sub_f)
                     if conn == '/\\':
                         # Negation of conjunction becomes disjunction of negations
-                        formulas.insert(0, '~' + lhs_f)
-                        formulas.insert(0, '~' + rhs_f)
+                        formulas.append(simplify('~' + lhs_f))
+                        formulas.append(simplify('~' + rhs_f))
                     elif conn == '\\/':
                         # Negation of disjunction becomes conjunction of negations
-                        formulas.append('~' + lhs_f)
-                        formulas.append('~' + rhs_f)
+                        formulas.extend([simplify('~' + lhs_f), simplify('~' + rhs_f)])
                     elif conn == '=>':
-                        # Negation of implication
-                        formulas.insert(0, sub_f.lstrip('(').rstrip(')'))
+                        # Negation of implication: A /\ ~B
+                        formulas.append(lhs_f)
+                        formulas.append(simplify('~' + rhs_f))
                     else:
                         return 0  # Not satisfiable
                 elif sub_parsed_type == 3:  # Negation of universal quantifier
                     var = sub_f[1]
                     sub_sub_f = sub_f[2:].strip()
-                    new_formula = 'E' + var + '~' + sub_sub_f
-                    formulas.insert(0, new_formula)
+                    new_formula = simplify('E' + var + '~' + sub_sub_f)
+                    formulas.append(new_formula)
                 elif sub_parsed_type == 4:  # Negation of existential quantifier
                     var = sub_f[1]
                     sub_sub_f = sub_f[2:].strip()
-                    new_formula = 'A' + var + '~' + sub_sub_f
-                    formulas.insert(0, new_formula)
+                    new_formula = simplify('A' + var + '~' + sub_sub_f)
+                    formulas.append(new_formula)
                 else:
                     return 0  # Not satisfiable
+
         elif parsed_type in [5, 8]:  # Binary connective
             lhs_f = lhs(f)
             rhs_f = rhs(f)
             conn = con(f)
             if conn == '/\\':
                 # Conjunction: add both
-                formulas.insert(0, lhs_f)
-                formulas.insert(0, rhs_f)
+                for nf in [lhs_f, rhs_f]:
+                    nf = simplify(nf)
+                    if nf not in processed:
+                        formulas.append(nf)
             elif conn == '\\/':
-                # Disjunction: process alternatives
-                # Backup current state
+                # Disjunction: since we can't branch, try both options sequentially
                 backup_formulas = formulas.copy()
                 backup_processed = processed.copy()
+
                 # Try left side
-                formulas.insert(0, lhs_f)
-                result = sat([formulas])
+                result = sat([[lhs_f], formulas])
                 if result == 1:
                     return 1  # Satisfiable
+
                 # Restore state and try right side
-                formulas = backup_formulas
-                processed = backup_processed
-                formulas.insert(0, rhs_f)
+                formulas = [rhs_f] + backup_formulas
+                processed = backup_processed.copy()
                 result = sat([formulas])
                 if result == 1:
                     return 1  # Satisfiable
-                return 0  # Not satisfiable
+
+                return 0  # Both options lead to closure
             elif conn == '=>':
-                # Implication: convert to disjunction
-                formulas.insert(0, '~' + lhs_f)
-                formulas.insert(0, rhs_f)
+                # Implication: equivalent to ~lhs \/ rhs
+                lhs_neg = simplify('~' + lhs_f)
+                # Since we can't branch, try both options sequentially
+                backup_formulas = formulas.copy()
+                backup_processed = processed.copy()
+
+                # Try left side
+                result = sat([[lhs_neg], formulas])
+                if result == 1:
+                    return 1  # Satisfiable
+
+                # Restore state and try right side
+                formulas = [rhs_f] + backup_formulas
+                processed = backup_processed.copy()
+                result = sat([formulas])
+                if result == 1:
+                    return 1  # Satisfiable
+
+                return 0  # Both options lead to closure
             else:
                 return 0  # Not satisfiable
+
         elif parsed_type == 3:  # Universal quantifier
             var = f[1]
             sub_f = f[2:].strip()
@@ -298,8 +341,10 @@ def sat(tableau):
                 constants.append(new_const)
             for c in constants:
                 instantiated_f = substitute(sub_f, var, c)
+                instantiated_f = simplify(instantiated_f)
                 if instantiated_f not in processed:
-                    formulas.insert(0, instantiated_f)
+                    formulas.append(instantiated_f)
+
         elif parsed_type == 4:  # Existential quantifier
             var = f[1]
             sub_f = f[2:].strip()
@@ -309,11 +354,15 @@ def sat(tableau):
             new_const = 'c' + str(len(constants) + 1)
             constants.append(new_const)
             instantiated_f = substitute(sub_f, var, new_const)
-            formulas.insert(0, instantiated_f)
+            instantiated_f = simplify(instantiated_f)
+            if instantiated_f not in processed:
+                formulas.append(instantiated_f)
         else:
             continue  # Can't expand further
 
     return 1  # Satisfiable
+
+
 
 
 

@@ -131,20 +131,52 @@ def parse(fmla):
     # If none of the above, it's not a formula
     return 0  # 'not a formula'
 
-
-
+# Helper function to split a binary connective formula into its components
+def split_binary(fmla):
+    fmla = fmla.strip()
+    # Remove outermost parentheses if they enclose the entire formula
+    if fmla.startswith('(') and fmla.endswith(')'):
+        fmla = fmla[1:-1].strip()
+    depth = 0
+    i = 0
+    connectives = ['/\\', '\\/', '=>']
+    while i < len(fmla):
+        c = fmla[i]
+        if c == '(':
+            depth += 1
+            i += 1
+        elif c == ')':
+            depth -= 1
+            i += 1
+        elif depth == 0:
+            # Check for connectives starting at this position
+            for conn in connectives:
+                conn_len = len(conn)
+                if fmla.startswith(conn, i):
+                    lhs = fmla[:i].strip()
+                    conn_symbol = conn
+                    rhs = fmla[i+conn_len:].strip()
+                    return lhs, conn_symbol, rhs
+            i += 1
+        else:
+            i += 1
+    return '', '', ''
 
 # Return the LHS of a binary connective formula
 def lhs(fmla):
-    return ''
+    left, _, _ = split_binary(fmla)
+    return left
 
 # Return the connective symbol of a binary connective formula
 def con(fmla):
-    return ''
+    _, connective, _ = split_binary(fmla)
+    return connective
 
-# Return the RHS symbol of a binary connective formula
+# Return the RHS of a binary connective formula
 def rhs(fmla):
-    return ''
+    _, _, right = split_binary(fmla)
+    return right
+
 
 
 # You may choose to represent a theory as a set or a list
@@ -206,3 +238,18 @@ for line in f:
             
 
 
+print("------")
+test_formulas = [
+    '(p/\\q)',
+    '(~p=>r)',
+    '((p\\/q)/\\(r=>s))',
+    '(P(x,y)/\\Q(y,z))',
+    '((P(x,x)=>Q(y,y))/\\~R(z,w))',
+]
+
+for formula in test_formulas:
+    print(f'Formula: {formula}')
+    print(f'  LHS: {lhs(formula)}')
+    print(f'  Connective: {con(formula)}')
+    print(f'  RHS: {rhs(formula)}')
+    print()

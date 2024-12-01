@@ -177,16 +177,145 @@ def rhs(fmla):
     _, _, right = split_binary(fmla)
     return right
 
+def theory(fmla):
+    return [fmla]
 
-
-# You may choose to represent a theory as a set or a list
-def theory(fmla):#initialise a theory with a single formula in it
-    return None
-
-#check for satisfiability
 def sat(tableau):
-#output 0 if not satisfiable, output 1 if satisfiable, output 2 if number of constants exceeds MAX_CONSTANTS
-    return 0
+    # Output 0 if not satisfiable, 1 if satisfiable, 2 if constants exceed MAX_CONSTANTS
+    constants = []
+    processed = set()  # Track processed formulas
+    
+    # Helper function to substitute variable with constant
+    def substitute(fmla, var, const):
+        return fmla.replace(var, const)
+    
+    # Flatten the formulas list
+    def flatten_formulas(lst):
+        flat_list = []
+        for item in lst:
+            if isinstance(item, list):
+                flat_list.extend(flatten_formulas(item))
+            else:
+                flat_list.append(item)
+        return flat_list
+
+    formulas = flatten_formulas(tableau.copy())  # Ensure formulas is a flat list of strings
+
+    while formulas:
+        f = formulas.pop(0)
+        if f in processed:
+            continue
+        processed.add(f)
+
+        # Check for closure
+        if ('~' + f) in processed or ('~' + f) in formulas:
+            return 0  # Not satisfiable
+        if f.startswith('~') and f[1:] in processed:
+            return 0  # Not satisfiable
+
+        # Expand the formula
+        parsed_type = parse(f)
+        if parsed_type in [1, 6]:  # Atom or proposition
+            continue  # Nothing to expand
+        elif parsed_type in [2, 7]:  # Negation
+            sub_f = f[1:].strip()
+            sub_parsed_type = parse(sub_f)
+            if sub_parsed_type == 0:
+                return 0  # Not a formula
+            if sub_parsed_type in [1, 6]:  # Negation of an atom or proposition
+                continue  # Can't expand further
+            else:
+                # Apply De Morgan's laws or quantifier negation
+                if sub_parsed_type in [5, 8]:  # Binary connective
+                    lhs_f = lhs(sub_f)
+                    rhs_f = rhs(sub_f)
+                    conn = con(sub_f)
+                    if conn == '/\\':
+                        # Negation of conjunction becomes disjunction of negations
+                        formulas.insert(0, '~' + lhs_f)
+                        formulas.insert(0, '~' + rhs_f)
+                    elif conn == '\\/':
+                        # Negation of disjunction becomes conjunction of negations
+                        formulas.append('~' + lhs_f)
+                        formulas.append('~' + rhs_f)
+                    elif conn == '=>':
+                        # Negation of implication
+                        formulas.insert(0, sub_f.lstrip('(').rstrip(')'))
+                    else:
+                        return 0  # Not satisfiable
+                elif sub_parsed_type == 3:  # Negation of universal quantifier
+                    var = sub_f[1]
+                    sub_sub_f = sub_f[2:].strip()
+                    new_formula = 'E' + var + '~' + sub_sub_f
+                    formulas.insert(0, new_formula)
+                elif sub_parsed_type == 4:  # Negation of existential quantifier
+                    var = sub_f[1]
+                    sub_sub_f = sub_f[2:].strip()
+                    new_formula = 'A' + var + '~' + sub_sub_f
+                    formulas.insert(0, new_formula)
+                else:
+                    return 0  # Not satisfiable
+        elif parsed_type in [5, 8]:  # Binary connective
+            lhs_f = lhs(f)
+            rhs_f = rhs(f)
+            conn = con(f)
+            if conn == '/\\':
+                # Conjunction: add both
+                formulas.insert(0, lhs_f)
+                formulas.insert(0, rhs_f)
+            elif conn == '\\/':
+                # Disjunction: process alternatives
+                # Backup current state
+                backup_formulas = formulas.copy()
+                backup_processed = processed.copy()
+                # Try left side
+                formulas.insert(0, lhs_f)
+                result = sat([formulas])
+                if result == 1:
+                    return 1  # Satisfiable
+                # Restore state and try right side
+                formulas = backup_formulas
+                processed = backup_processed
+                formulas.insert(0, rhs_f)
+                result = sat([formulas])
+                if result == 1:
+                    return 1  # Satisfiable
+                return 0  # Not satisfiable
+            elif conn == '=>':
+                # Implication: convert to disjunction
+                formulas.insert(0, '~' + lhs_f)
+                formulas.insert(0, rhs_f)
+            else:
+                return 0  # Not satisfiable
+        elif parsed_type == 3:  # Universal quantifier
+            var = f[1]
+            sub_f = f[2:].strip()
+            # For each existing constant, substitute and add
+            if not constants:
+                if len(constants) >= MAX_CONSTANTS:
+                    return 2  # Exceeds MAX_CONSTANTS
+                new_const = 'c' + str(len(constants) + 1)
+                constants.append(new_const)
+            for c in constants:
+                instantiated_f = substitute(sub_f, var, c)
+                if instantiated_f not in processed:
+                    formulas.insert(0, instantiated_f)
+        elif parsed_type == 4:  # Existential quantifier
+            var = f[1]
+            sub_f = f[2:].strip()
+            # Introduce a new constant
+            if len(constants) >= MAX_CONSTANTS:
+                return 2  # Exceeds MAX_CONSTANTS
+            new_const = 'c' + str(len(constants) + 1)
+            constants.append(new_const)
+            instantiated_f = substitute(sub_f, var, new_const)
+            formulas.insert(0, instantiated_f)
+        else:
+            continue  # Can't expand further
+
+    return 1  # Satisfiable
+
+
 
 #------------------------------------------------------------------------------------------------------------------------------:
 #                   DO NOT MODIFY THE CODE BELOW. MODIFICATION OF THE CODE BELOW WILL RESULT IN A MARK OF 0!                   :
@@ -236,20 +365,3 @@ for line in f:
         else:
             print('%s is not a formula.' % line)
             
-
-
-print("------")
-test_formulas = [
-    '(p/\\q)',
-    '(~p=>r)',
-    '((p\\/q)/\\(r=>s))',
-    '(P(x,y)/\\Q(y,z))',
-    '((P(x,x)=>Q(y,y))/\\~R(z,w))',
-]
-
-for formula in test_formulas:
-    print(f'Formula: {formula}')
-    print(f'  LHS: {lhs(formula)}')
-    print(f'  Connective: {con(formula)}')
-    print(f'  RHS: {rhs(formula)}')
-    print()

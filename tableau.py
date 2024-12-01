@@ -329,14 +329,14 @@ def sat(tableau):
                     print("Negation of binary connective:", sub_f)
                     if conn == '/\\':
                         print("Adding branches for negation of conjunction")
-                        formulas.extend([simplify('~' + lhs_f), simplify('~' + rhs_f)])
-                    elif conn == '\\/':
-                        print("Adding branches for negation of disjunction")
                         stack.append(([simplify('~' + lhs_f)] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                         stack.append(([simplify('~' + rhs_f)] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                         break
+                    elif conn == '\\/':
+                        print("Expanding negation of disjunction to conjunction of negations")
+                        formulas.extend([simplify('~' + lhs_f), simplify('~' + rhs_f)])
                     elif conn == '=>':
-                        print("Expanding negation of implication")
+                        print("Expanding negation of implication to conjunction")
                         formulas.extend([lhs_f, simplify('~' + rhs_f)])
                 elif sub_parsed_type == 3:
                     var = sub_f[1]

@@ -1,2 +1,2 @@
 PARSE SAT
-(AxEyP(x,y)/\EzQ(z,z))
+ExAx(P(x,x)/\~P(x,x))

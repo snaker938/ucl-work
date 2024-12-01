@@ -1,0 +1,39 @@
+ExAx(P(x,x)/\~P(x,x)) is an existentially quantified formula.
+Initial formulas: ['ExAx(P(x,x)/\\~P(x,x))']
+
+Popped from stack:
+Formulas: ['ExAx(P(x,x)/\\~P(x,x))']
+Constants: []
+Processed: set()
+Constants count: 0
+
+Processing formula: ExAx(P(x,x)/\~P(x,x))
+Processed set updated: {'ExAx(P(x,x)/\\~P(x,x))'}
+Parsed type: 4
+Existential quantifier: ExAx(P(x,x)/\~P(x,x))
+Introduced new constant: c1
+Adding instantiated formula: Ax(P(c1,c1)/\~P(c1,c1))
+
+Processing formula: Ax(P(c1,c1)/\~P(c1,c1))
+Processed set updated: {'ExAx(P(x,x)/\\~P(x,x))', 'Ax(P(c1,c1)/\\~P(c1,c1))'}
+Parsed type: 3
+Universal quantifier: Ax(P(c1,c1)/\~P(c1,c1))
+Variable: x
+Subformula: (P(c1,c1)/\~P(c1,c1))
+Instantiating with existing constant c1: (P(c1,c1)/\~P(c1,c1))
+Re-added universal formula for future instantiation
+
+Processing formula: (P(c1,c1)/\~P(c1,c1))
+Processed set updated: {'ExAx(P(x,x)/\\~P(x,x))', '(P(c1,c1)/\\~P(c1,c1))', 'Ax(P(c1,c1)/\\~P(c1,c1))'}
+Parsed type: 5
+Binary connective: (P(c1,c1)/\~P(c1,c1))
+Adding LHS and RHS to formulas
+
+Processing formula: Ax(P(c1,c1)/\~P(c1,c1))
+Already processed: Ax(P(c1,c1)/\~P(c1,c1))
+
+Processing formula: P(c1,c1)
+Contradiction found with formula: P(c1,c1)
+Branch closed due to contradiction
+All branches closed
+ExAx(P(x,x)/\~P(x,x)) is not satisfiable.

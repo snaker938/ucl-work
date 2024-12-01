@@ -1,3 +1,5 @@
+import filecmp
+
 MAX_CONSTANTS = 10
 
 # Parse a formula, consult parseOutputs for return values.
@@ -182,27 +184,28 @@ def theory(fmla):
 
 def sat(tableau):
     # Output 0 if not satisfiable, 1 if satisfiable, 2 if constants exceed MAX_CONSTANTS
-    constants = []
-    processed = set()  # Track processed formulas
+    MAX_CONSTANTS = 10  # Maximum allowed constants
 
-    # Helper function to substitute variable with constant
+    # Helper functions within sat
     def substitute(fmla, var, const):
+        # Substitute variable with constant in formula
         return fmla.replace(var, const)
 
-    # Helper function to simplify multiple negations
     def simplify(f):
+        # Simplify multiple negations and remove redundant parentheses
         f = f.strip()
+        while f.startswith('~(') and f.endswith(')'):
+            f = f[1:-1].strip()
         neg_count = 0
         while f.startswith('~'):
             neg_count += 1
             f = f[1:].strip()
-        simplified_f = f
         if neg_count % 2 == 1:
-            simplified_f = '~' + f
-        return simplified_f
+            f = '~' + f
+        return f
 
-    # Helper function to flatten the tableau list
     def flatten(lst):
+        # Flatten a nested list
         flat_list = []
         for item in lst:
             if isinstance(item, list):
@@ -211,160 +214,139 @@ def sat(tableau):
                 flat_list.append(item)
         return flat_list
 
-    # Flatten the tableau into a list of formulas
-    formulas = flatten(tableau)
-    formulas = [simplify(f) for f in formulas]
+    # Initialize the stack with the initial state
+    initial_formulas = flatten(tableau)
+    initial_formulas = [simplify(f) for f in initial_formulas]
+    stack = [ (initial_formulas, [], set()) ]  # Each element is (formulas, constants, processed)
 
-    while formulas:
-        f = formulas.pop(0)
-        f = simplify(f)
-        if f in processed:
-            continue
-        processed.add(f)
+    while stack:
+        formulas, constants, processed = stack.pop()
+        index = 0
+        formulas = formulas.copy()
+        processed = processed.copy()
+        constants = constants.copy()
 
-        # Simplify the negation of f
-        f_neg = simplify('~' + f)
-
-        # Check for closure
-        if f_neg in processed:
-            return 0  # Not satisfiable
-
-        parsed_type = parse(f)
-        if parsed_type == 0:
-            return 0  # Not a formula
-
-        if parsed_type in [1, 6]:  # Atom or proposition
-            continue  # Nothing to expand
-
-        elif parsed_type in [2, 7]:  # Negation
-            sub_f = f[1:].strip()
-            sub_f = simplify(sub_f)
-            sub_parsed_type = parse(sub_f)
-            if sub_parsed_type == 0:
-                return 0  # Not a formula
-            if sub_parsed_type in [1, 6]:  # Negation of an atom or proposition
-                if sub_f in processed:
-                    return 0  # Contradiction
-                processed.add(f)
+        while index < len(formulas):
+            f = simplify(formulas[index])
+            index += 1
+            if f in processed:
                 continue
-            else:
-                # Apply De Morgan's laws or quantifier negation
-                if sub_parsed_type in [5, 8]:  # Binary connective
+            processed.add(f)
+
+            # Check for closure (contradiction)
+            if ('~' + f) in processed or ('~' + f) in formulas[index:]:
+                break  # Move to the next branch
+            if f.startswith('~') and f[1:] in processed:
+                break
+
+            parsed_type = parse(f)
+            if parsed_type == 0:
+                break  # Invalid formula
+
+            if parsed_type in [1, 6]:  # Atom or proposition
+                continue  # Nothing to expand
+
+            elif parsed_type in [2, 7]:  # Negation
+                sub_f = simplify(f[1:].strip())
+                sub_parsed_type = parse(sub_f)
+                if sub_parsed_type == 0:
+                    break  # Invalid formula
+                if sub_parsed_type in [1, 6]:
+                    if sub_f in processed:
+                        break  # Contradiction
+                    else:
+                        continue
+                elif sub_parsed_type in [5, 8]:  # Binary connective
                     lhs_f = lhs(sub_f)
                     rhs_f = rhs(sub_f)
                     conn = con(sub_f)
                     if conn == '/\\':
-                        # Negation of conjunction becomes disjunction of negations
-                        formulas.append(simplify('~' + lhs_f))
-                        formulas.append(simplify('~' + rhs_f))
+                        # ~ (A /\ B) => ~A \/ ~B (branch)
+                        # Option 1: ~A
+                        stack.append(( [simplify('~' + lhs_f)] + formulas[index:], constants.copy(), processed.copy()))
+                        # Option 2: ~B
+                        stack.append(( [simplify('~' + rhs_f)] + formulas[index:], constants.copy(), processed.copy()))
+                        break  # Branching complete
                     elif conn == '\\/':
-                        # Negation of disjunction becomes conjunction of negations
+                        # ~ (A \/ B) => ~A /\ ~B
                         formulas.extend([simplify('~' + lhs_f), simplify('~' + rhs_f)])
                     elif conn == '=>':
-                        # Negation of implication: A /\ ~B
-                        formulas.append(lhs_f)
-                        formulas.append(simplify('~' + rhs_f))
+                        # ~ (A => B) => A /\ ~B
+                        formulas.extend([lhs_f, simplify('~' + rhs_f)])
                     else:
-                        return 0  # Not satisfiable
-                elif sub_parsed_type == 3:  # Negation of universal quantifier
+                        break  # Unknown connective
+                elif sub_parsed_type == 3:  # Universal quantifier
                     var = sub_f[1]
                     sub_sub_f = sub_f[2:].strip()
                     new_formula = simplify('E' + var + '~' + sub_sub_f)
                     formulas.append(new_formula)
-                elif sub_parsed_type == 4:  # Negation of existential quantifier
+                elif sub_parsed_type == 4:  # Existential quantifier
                     var = sub_f[1]
                     sub_sub_f = sub_f[2:].strip()
                     new_formula = simplify('A' + var + '~' + sub_sub_f)
                     formulas.append(new_formula)
                 else:
-                    return 0  # Not satisfiable
+                    break  # Not derivable
 
-        elif parsed_type in [5, 8]:  # Binary connective
-            lhs_f = lhs(f)
-            rhs_f = rhs(f)
-            conn = con(f)
-            if conn == '/\\':
-                # Conjunction: add both
-                for nf in [lhs_f, rhs_f]:
-                    nf = simplify(nf)
-                    if nf not in processed:
-                        formulas.append(nf)
-            elif conn == '\\/':
-                # Disjunction: since we can't branch, try both options sequentially
-                backup_formulas = formulas.copy()
-                backup_processed = processed.copy()
+            elif parsed_type in [5, 8]:  # Binary connective
+                lhs_f = lhs(f)
+                rhs_f = rhs(f)
+                conn = con(f)
+                if conn == '/\\':
+                    # A /\ B
+                    formulas.extend([lhs_f, rhs_f])
+                elif conn == '\\/':
+                    # A \/ B (branch)
+                    # Option 1: A
+                    stack.append(( [lhs_f] + formulas[index:], constants.copy(), processed.copy()))
+                    # Option 2: B
+                    stack.append(( [rhs_f] + formulas[index:], constants.copy(), processed.copy()))
+                    break
+                elif conn == '=>':
+                    # A => B equivalent to ~A \/ B
+                    # Option 1: ~A
+                    stack.append(( [simplify('~' + lhs_f)] + formulas[index:], constants.copy(), processed.copy()))
+                    # Option 2: B
+                    stack.append(( [rhs_f] + formulas[index:], constants.copy(), processed.copy()))
+                    break
+                else:
+                    break  # Unknown connective
 
-                # Try left side
-                result = sat([[lhs_f], formulas])
-                if result == 1:
-                    return 1  # Satisfiable
+            elif parsed_type == 3:  # Universal quantifier
+                var = f[1]
+                sub_f = f[2:].strip()
+                # Instantiate with existing constants
+                if not constants:
+                    # Introduce a new constant
+                    if len(constants) >= MAX_CONSTANTS:
+                        return 2  # Undetermined
+                    new_const = 'c' + str(len(constants) + 1)
+                    constants.append(new_const)
+                for c in constants:
+                    instantiated_f = simplify(substitute(sub_f, var, c))
+                    if instantiated_f not in processed:
+                        formulas.append(instantiated_f)
 
-                # Restore state and try right side
-                formulas = [rhs_f] + backup_formulas
-                processed = backup_processed.copy()
-                result = sat([formulas])
-                if result == 1:
-                    return 1  # Satisfiable
-
-                return 0  # Both options lead to closure
-            elif conn == '=>':
-                # Implication: equivalent to ~lhs \/ rhs
-                lhs_neg = simplify('~' + lhs_f)
-                # Since we can't branch, try both options sequentially
-                backup_formulas = formulas.copy()
-                backup_processed = processed.copy()
-
-                # Try left side
-                result = sat([[lhs_neg], formulas])
-                if result == 1:
-                    return 1  # Satisfiable
-
-                # Restore state and try right side
-                formulas = [rhs_f] + backup_formulas
-                processed = backup_processed.copy()
-                result = sat([formulas])
-                if result == 1:
-                    return 1  # Satisfiable
-
-                return 0  # Both options lead to closure
-            else:
-                return 0  # Not satisfiable
-
-        elif parsed_type == 3:  # Universal quantifier
-            var = f[1]
-            sub_f = f[2:].strip()
-            # For each existing constant, substitute and add
-            if not constants:
+            elif parsed_type == 4:  # Existential quantifier
+                var = f[1]
+                sub_f = f[2:].strip()
+                # Introduce a new constant
                 if len(constants) >= MAX_CONSTANTS:
-                    return 2  # Exceeds MAX_CONSTANTS
+                    return 2  # Undetermined
                 new_const = 'c' + str(len(constants) + 1)
                 constants.append(new_const)
-            for c in constants:
-                instantiated_f = substitute(sub_f, var, c)
-                instantiated_f = simplify(instantiated_f)
+                instantiated_f = simplify(substitute(sub_f, var, new_const))
                 if instantiated_f not in processed:
                     formulas.append(instantiated_f)
+            else:
+                continue  # Cannot expand further
 
-        elif parsed_type == 4:  # Existential quantifier
-            var = f[1]
-            sub_f = f[2:].strip()
-            # Introduce a new constant
-            if len(constants) >= MAX_CONSTANTS:
-                return 2  # Exceeds MAX_CONSTANTS
-            new_const = 'c' + str(len(constants) + 1)
-            constants.append(new_const)
-            instantiated_f = substitute(sub_f, var, new_const)
-            instantiated_f = simplify(instantiated_f)
-            if instantiated_f not in processed:
-                formulas.append(instantiated_f)
         else:
-            continue  # Can't expand further
+            # No contradictions found; satisfiable
+            return 1
 
-    return 1  # Satisfiable
-
-
-
-
+    # All branches closed; not satisfiable
+    return 0
 
 #------------------------------------------------------------------------------------------------------------------------------:
 #                   DO NOT MODIFY THE CODE BELOW. MODIFICATION OF THE CODE BELOW WILL RESULT IN A MARK OF 0!                   :
@@ -414,3 +396,28 @@ for line in f:
         else:
             print('%s is not a formula.' % line)
             
+
+# clear the console
+import os
+os.system('cls' if os.name == 'nt' else 'clear')
+
+# Compare the output.txt with the expected_output.txt
+if filecmp.cmp('output.txt', 'expected_output.txt', shallow=False):
+    print("The output matches the expected output.")
+else:
+    print("The output does not match the expected output.")
+    # Show the differences
+    with open('output.txt', 'r') as output_file:
+        output_lines = output_file.readlines()
+    with open('expected_output.txt', 'r') as expected_file:
+        expected_lines = expected_file.readlines()
+    
+    for i, (output_line, expected_line) in enumerate(zip(output_lines, expected_lines)):
+        if output_line != expected_line:
+            # print(f"Difference at line {i+1}:")
+            print(f"Output: {output_line.strip()}")
+            print(f"Expected: {expected_line.strip()}")
+            
+    # print out the number of mismatches
+    num_mismatches = sum(1 for ol, el in zip(output_lines, expected_lines) if ol != el)
+    print(f"Number of mismatches: {num_mismatches}")

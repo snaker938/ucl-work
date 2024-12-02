@@ -237,6 +237,7 @@ def parse_fmla(fmla):
     # If none of the above, it's an atom
     return 0  # Atom
 
+
 def sat(tableau):
     MAX_CONSTANTS = 10
 
@@ -273,162 +274,190 @@ def sat(tableau):
                 flat_list.append(item)
         return flat_list
 
+    def has_nested_quantifiers(f):
+        # Check if formula has nested quantifiers
+        if len(f) < 2:
+            return False
+        sub_f = f[2:].strip() if f[0] in ['A', 'E'] else f
+        return 'A' in sub_f or 'E' in sub_f
+
     stack = []
     initial_formulas = flatten(tableau)
     initial_formulas = [simplify(f) for f in initial_formulas]
-    print("Initial formulas:", initial_formulas)
+    # print("Initial formulas:", initial_formulas)
+    
+    # Track universal formulas and their instantiations
+    univ_formulas = {}  # formula -> set of constants used
     stack.append((initial_formulas, [], set(), 0))
 
     while stack:
         formulas, constants, processed, constants_count = stack.pop()
-        print("\nPopped from stack:")
-        print("Formulas:", formulas)
-        print("Constants:", constants)
-        print("Processed:", processed)
-        print("Constants count:", constants_count)
+        # print("\nPopped from stack:")
+        # print("Formulas:", formulas)
+        # print("Constants:", constants)
+        # print("Processed:", processed)
+        # print("Constants count:", constants_count)
+
         formulas = formulas.copy()
         constants = constants.copy()
         processed = processed.copy()
+        
         index = 0
         while index < len(formulas):
             f = simplify(formulas[index])
-            print("\nProcessing formula:", f)
+            # print("\nProcessing formula:", f)
             index += 1
 
-            if f in processed:
-                print("Already processed:", f)
+            parsed_type = parse_fmla(f)
+            # print("Parsed type:", parsed_type)
+
+            # Special handling for nested quantifiers
+            if has_nested_quantifiers(f):
+                if constants_count >= MAX_CONSTANTS - 1:  # Need room for at least 2 constants
+                    # print("Reached MAX_CONSTANTS with nested quantifiers remaining")
+                    return 2
+
+            if parsed_type == 3:  # Universal quantifier
+                if f not in univ_formulas:
+                    univ_formulas[f] = set()
+                
+                # If we have a nested quantifier and are close to MAX_CONSTANTS
+                if has_nested_quantifiers(f) and constants_count >= MAX_CONSTANTS - 2:
+                    # print("Insufficient constants remaining for nested quantifiers")
+                    return 2
+
+                # Process universal quantifier
+                # print("Universal quantifier:", f)
+                var = f[1]
+                sub_f = f[2:].strip()
+                # print("Variable:", var)
+                # print("Subformula:", sub_f)
+
+                # Try existing constants
+                instantiated = False
+                for c in constants:
+                    if c not in univ_formulas[f]:
+                        instantiated_f = simplify(substitute(sub_f, var, c))
+                        if instantiated_f not in processed:
+                            # print(f"Instantiating with existing constant {c}: {instantiated_f}")
+                            formulas.append(instantiated_f)
+                            univ_formulas[f].add(c)
+                            instantiated = True
+
+                # Create new constant if needed
+                if not instantiated:
+                    if constants_count >= MAX_CONSTANTS:
+                        # print("Reached MAX_CONSTANTS with universal quantifier remaining")
+                        return 2
+                    new_const = f'c{constants_count + 1}'
+                    constants.append(new_const)
+                    constants_count += 1
+                    # print("Introduced new constant:", new_const)
+                    instantiated_f = simplify(substitute(sub_f, var, new_const))
+                    # print("Adding instantiated formula:", instantiated_f)
+                    formulas.append(instantiated_f)
+                    univ_formulas[f].add(new_const)
+
+                # Always re-add universal formula unless fully instantiated
+                if len(univ_formulas[f]) < MAX_CONSTANTS:
+                    formulas.append(f)
+                    # print("Re-added universal formula for future instantiation")
                 continue
+
+            # Rest of the function
+            if f in processed and parsed_type != 3:  # Don't skip universal formulas
+                # print("Already processed:", f)
+                continue
+
             if ('~' + f) in processed or ('~' + f) in formulas[index:]:
-                print("Contradiction found with formula:", f)
+                # print("Contradiction found with formula:", f)
                 break
             if f.startswith('~') and (f[1:] in processed or f[1:] in formulas[index:]):
-                print("Contradiction found with negation of formula:", f)
+                # print("Contradiction found with negation of formula:", f)
                 break
-            processed.add(f)
-            print("Processed set updated:", processed)
 
-            parsed_type = parse_fmla(f)
-            print("Parsed type:", parsed_type)
+            processed.add(f)
+            # print("Processed set updated:", processed)
+
             if parsed_type == 0:
-                print("Assuming atom:", f)
+                # print("Assuming atom:", f)
                 continue
 
             elif parsed_type == 2:
-                print("Negation:", f)
+                # Negation handling (same as before)
+                # print("Negation:", f)
                 sub_f = simplify(f[1:])
-                print("Subformula after negation simplification:", sub_f)
+                # print("Subformula after negation simplification:", sub_f)
                 sub_parsed_type = parse_fmla(sub_f)
-                print("Subformula parsed type:", sub_parsed_type)
+                # print("Subformula parsed type:", sub_parsed_type)
                 if sub_parsed_type == 0:
-                    print("Assuming negated atom:", sub_f)
+                    # print("Assuming negated atom:", sub_f)
                     continue
                 elif sub_parsed_type == 5:
                     lhs_f = lhs(sub_f)
                     rhs_f = rhs(sub_f)
                     conn = con(sub_f)
-                    print("Negation of binary connective:", sub_f)
+                    # print("Negation of binary connective:", sub_f)
                     if conn == '/\\':
-                        print("Adding branches for negation of conjunction")
+                        # print("Adding branches for negation of conjunction")
                         stack.append(([simplify('~' + lhs_f)] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                         stack.append(([simplify('~' + rhs_f)] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                         break
                     elif conn == '\\/':
-                        print("Expanding negation of disjunction to conjunction of negations")
+                        # print("Expanding negation of disjunction to conjunction of negations")
                         formulas.extend([simplify('~' + lhs_f), simplify('~' + rhs_f)])
                     elif conn == '=>':
-                        print("Expanding negation of implication to conjunction")
+                        # print("Expanding negation of implication to conjunction")
                         formulas.extend([lhs_f, simplify('~' + rhs_f)])
-                elif sub_parsed_type == 3:
-                    var = sub_f[1]
-                    sub_sub_f = sub_f[2:].strip()
-                    print("Negation of universal quantifier")
-                    new_formula = 'E' + var + '~' + sub_sub_f
-                    print("Adding existential formula:", new_formula)
-                    formulas.append(simplify(new_formula))
-                elif sub_parsed_type == 4:
-                    var = sub_f[1]
-                    sub_sub_f = sub_f[2:].strip()
-                    print("Negation of existential quantifier")
-                    new_formula = 'A' + var + '~' + sub_sub_f
-                    print("Adding universal formula:", new_formula)
-                    formulas.append(simplify(new_formula))
-                else:
-                    print("Unhandled negation case")
-                    continue
 
-            elif parsed_type == 5:
-                print("Binary connective:", f)
+            elif parsed_type == 4:  # Existential quantifier
+                # print("Existential quantifier:", f)
+                var = f[1]
+                sub_f = f[2:].strip()
+                if constants_count >= MAX_CONSTANTS:
+                    # print("Reached MAX_CONSTANTS")
+                    return 2
+                new_const = f'c{constants_count + 1}'
+                constants.append(new_const)
+                constants_count += 1
+                instantiated_f = simplify(substitute(sub_f, var, new_const))
+                # print("Introduced new constant:", new_const)
+                # print("Adding instantiated formula:", instantiated_f)
+                if instantiated_f not in processed:
+                    formulas.append(instantiated_f)
+
+            elif parsed_type == 5:  # Binary connective
+                # print("Binary connective:", f)
                 lhs_f = lhs(f)
                 rhs_f = rhs(f)
                 conn = con(f)
                 if conn == '/\\':
-                    print("Adding LHS and RHS to formulas")
+                    # print("Adding LHS and RHS to formulas")
                     formulas.extend([lhs_f, rhs_f])
                 elif conn == '\\/':
-                    print("Adding branches for disjunction")
+                    # print("Adding branches for disjunction")
                     stack.append(([lhs_f] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                     stack.append(([rhs_f] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                     break
                 elif conn == '=>':
-                    print("Adding branches for implication")
+                    # print("Adding branches for implication")
                     stack.append(([simplify('~' + lhs_f)] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                     stack.append(([rhs_f] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                     break
 
-            elif parsed_type == 3:
-                print("Universal quantifier:", f)
-                var = f[1]
-                sub_f = f[2:].strip()
-                print("Variable:", var)
-                print("Subformula:", sub_f)
-                instantiated_formulas = []
-                for c in constants:
-                    instantiated_f = simplify(substitute(sub_f, var, c))
-                    if instantiated_f not in processed:
-                        print(f"Instantiating with existing constant {c}: {instantiated_f}")
-                        instantiated_formulas.append(instantiated_f)
-                if not instantiated_formulas:
-                    if constants_count >= MAX_CONSTANTS:
-                        print("Reached MAX_CONSTANTS")
-                        return 2
-                    new_const = 'c' + str(constants_count + 1)
-                    constants.append(new_const)
-                    constants_count += 1
-                    print("Introduced new constant:", new_const)
-                    instantiated_f = simplify(substitute(sub_f, var, new_const))
-                    print("Adding instantiated formula:", instantiated_f)
-                    instantiated_formulas.append(instantiated_f)
-                formulas.extend(instantiated_formulas)
-                formulas.append(f)
-                print("Re-added universal formula for future instantiation")
-
-            elif parsed_type == 4:
-                print("Existential quantifier:", f)
-                var = f[1]
-                sub_f = f[2:].strip()
-                if constants_count >= MAX_CONSTANTS:
-                    print("Reached MAX_CONSTANTS")
-                    return 2
-                new_const = 'c' + str(constants_count + 1)
-                constants.append(new_const)
-                constants_count += 1
-                instantiated_f = simplify(substitute(sub_f, var, new_const))
-                print("Introduced new constant:", new_const)
-                print("Adding instantiated formula:", instantiated_f)
-                if instantiated_f not in processed:
-                    formulas.append(instantiated_f)
-
-            else:
-                print("Unhandled formula type:", f)
-                continue
         else:
-            if constants_count >= MAX_CONSTANTS:
-                print("Reached MAX_CONSTANTS at end of branch")
-                return 2
-            print("Open branch found")
+            # Check if we have universal quantifiers that need more constants
+            for univ_f in univ_formulas:
+                if len(univ_formulas[univ_f]) < MAX_CONSTANTS and has_nested_quantifiers(univ_f):
+                    # print("Universal quantifier with nested quantifiers needs more constants")
+                    return 2
+                    
+            # print("Open branch found")
             return 1
-        print("Branch closed due to contradiction")
-    print("All branches closed")
+
+        # print("Branch closed due to contradiction")
+    
+    # print("All branches closed")
     return 0
 
 #------------------------------------------------------------------------------------------------------------------------------:
@@ -481,26 +510,26 @@ for line in f:
             
 
 # clear the console
-# import os
-# os.system('cls' if os.name == 'nt' else 'clear')
+import os
+os.system('cls' if os.name == 'nt' else 'clear')
 
-# # Compare the output.txt with the expected_output.txt
-# if filecmp.cmp('output.txt', 'expected_output.txt', shallow=False):
-#     print("The output matches the expected output.")
-# else:
-#     print("The output does not match the expected output.")
-#     # Show the differences
-#     with open('output.txt', 'r') as output_file:
-#         output_lines = output_file.readlines()
-#     with open('expected_output.txt', 'r') as expected_file:
-#         expected_lines = expected_file.readlines()
+# Compare the output.txt with the expected_output.txt
+if filecmp.cmp('output.txt', 'expected_output.txt', shallow=False):
+    print("The output matches the expected output.")
+else:
+    print("The output does not match the expected output.")
+    # Show the differences
+    with open('output.txt', 'r') as output_file:
+        output_lines = output_file.readlines()
+    with open('expected_output.txt', 'r') as expected_file:
+        expected_lines = expected_file.readlines()
     
-#     for i, (output_line, expected_line) in enumerate(zip(output_lines, expected_lines)):
-#         if output_line != expected_line:
-#             # print(f"Difference at line {i+1}:")
-#             print(f"Output: {output_line.strip()}")
-#             print(f"Expected: {expected_line.strip()}")
+    for i, (output_line, expected_line) in enumerate(zip(output_lines, expected_lines)):
+        if output_line != expected_line:
+            # print(f"Difference at line {i+1}:")
+            print(f"Output: {output_line.strip()}")
+            print(f"Expected: {expected_line.strip()}")
             
-#     # print out the number of mismatches
-#     num_mismatches = sum(1 for ol, el in zip(output_lines, expected_lines) if ol != el)
-#     print(f"Number of mismatches: {num_mismatches}")
+    # print out the number of mismatches
+    num_mismatches = sum(1 for ol, el in zip(output_lines, expected_lines) if ol != el)
+    print(f"Number of mismatches: {num_mismatches}")

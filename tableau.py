@@ -240,18 +240,27 @@ def parse_fmla(fmla):
 
 def sat(tableau):
     MAX_CONSTANTS = 10
+    constant_counter = 0  # To ensure unique constants
 
     def substitute(fmla, var, const):
-        result = ''
+        # Improved substitution function
+        tokens = []
         i = 0
         while i < len(fmla):
-            if fmla[i] == var and (i == 0 or not fmla[i - 1].isalnum()) and (i + 1 == len(fmla) or not fmla[i + 1].isalnum()):
-                result += const
+            if fmla[i].isalpha():
+                var_name = fmla[i]
                 i += 1
+                while i < len(fmla) and fmla[i].isalnum():
+                    var_name += fmla[i]
+                    i += 1
+                if var_name == var:
+                    tokens.append(const)
+                else:
+                    tokens.append(var_name)
             else:
-                result += fmla[i]
+                tokens.append(fmla[i])
                 i += 1
-        return result
+        return ''.join(tokens)
 
     def simplify(f):
         f = f.strip()
@@ -333,6 +342,14 @@ def sat(tableau):
                 # print("Variable:", var)
                 # print("Subformula:", sub_f)
 
+                # Vacuous quantifier handling
+                if var not in sub_f:
+                    # print(f"Variable {var} is not in subformula; simplifying vacuous quantifier.")
+                    f = sub_f  # Replace quantifier with subformula
+                    formulas[index - 1] = f  # Update current formula
+                    index -= 1  # Reprocess this formula
+                    continue  # Skip to next iteration
+
                 # Try existing constants
                 instantiated = False
                 for c in constants:
@@ -411,20 +428,33 @@ def sat(tableau):
                         formulas.extend([lhs_f, simplify('~' + rhs_f)])
 
             elif parsed_type == 4:  # Existential quantifier
-                # print("Existential quantifier:", f)
                 var = f[1]
                 sub_f = f[2:].strip()
+                # print("Variable:", var)
+                # print("Subformula:", sub_f)
+
+                # Vacuous quantifier handling
+                if var not in sub_f:
+                    # print(f"Variable {var} is not in subformula; simplifying vacuous quantifier.")
+                    f = sub_f  # Replace quantifier with subformula
+                    formulas[index - 1] = f  # Update current formula
+                    index -= 1
+                    continue
+
                 if constants_count >= MAX_CONSTANTS:
                     # print("Reached MAX_CONSTANTS")
                     return 2
-                new_const = f'c{constants_count + 1}'
+                # Introduce a unique constant for this quantifier
+                constant_counter += 1
+                new_const = f'c_{var}_{constant_counter}'
                 constants.append(new_const)
                 constants_count += 1
-                instantiated_f = simplify(substitute(sub_f, var, new_const))
                 # print("Introduced new constant:", new_const)
+                instantiated_f = simplify(substitute(sub_f, var, new_const))
                 # print("Adding instantiated formula:", instantiated_f)
                 if instantiated_f not in processed:
                     formulas.append(instantiated_f)
+                continue
 
             elif parsed_type == 5:  # Binary connective
                 # print("Binary connective:", f)

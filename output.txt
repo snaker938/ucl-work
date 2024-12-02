@@ -45,4 +45,4 @@ Ex~P(x,x) is satisfiable.
 (Ax(P(x,x)/\~P(x,x))/\ExQ(x,x)) is a binary connective first order formula. Its left hand side is Ax(P(x,x)/\~P(x,x)), its connective is /\, and its right hand side is ExQ(x,x).
 (Ax(P(x,x)/\~P(x,x))/\ExQ(x,x)) is not satisfiable.
 ExEy(P(x,y)/\Ex~P(x,y)) is an existentially quantified formula.
-ExEy(P(x,y)/\Ex~P(x,y)) is not satisfiable.
+ExEy(P(x,y)/\Ex~P(x,y)) is satisfiable.

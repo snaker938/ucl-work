@@ -2,7 +2,7 @@ import filecmp
 
 MAX_CONSTANTS = 10
 
-# Parse a formula, consult parseOutputs for return values.
+
 def parse(fmla):
     """
     Parses a logical formula and returns an integer code representing its type.
@@ -135,56 +135,112 @@ def parse(fmla):
     # Not a valid formula
     return 0
 
-
-
-
-# Helper function to split a binary connective formula into its components
 def split_binary(fmla):
+    """
+    Splits a logical formula into its left-hand side (lhs), connective symbol, and right-hand side (rhs)
+    if it contains a top-level binary connective.
+
+    Parameters:
+        fmla (str): The logical formula as a string.
+
+    Returns:
+        tuple: (lhs, connective, rhs) if a top-level binary connective is found,
+               otherwise (None, None, None).
+    """
     fmla = fmla.strip()
+    connectives = ['/\\', '\\/', '=>']
+
     # Remove outermost parentheses if they enclose the entire formula
     if fmla.startswith('(') and fmla.endswith(')'):
-        fmla = fmla[1:-1].strip()
+        # Check if the outer parentheses enclose the entire formula
+        depth = 0
+        for i, c in enumerate(fmla):
+            if c == '(':
+                depth += 1
+            elif c == ')':
+                depth -= 1
+            if depth == 0 and i < len(fmla) - 1:
+                break
+        else:
+            # Parentheses enclose the entire formula
+            fmla = fmla[1:-1].strip()
+
     depth = 0
     i = 0
-    connectives = ['/\\', '\\/', '=>']
     while i < len(fmla):
         c = fmla[i]
         if c == '(':
             depth += 1
-            i += 1
         elif c == ')':
             depth -= 1
-            i += 1
+            if depth < 0:
+                # Unmatched closing parenthesis
+                return None, None, None
         elif depth == 0:
-            # Check for connectives starting at this position
+            # Check for connectives at the current position
             for conn in connectives:
-                conn_len = len(conn)
                 if fmla.startswith(conn, i):
                     lhs = fmla[:i].strip()
-                    conn_symbol = conn
-                    rhs = fmla[i+conn_len:].strip()
-                    return lhs, conn_symbol, rhs
-            i += 1
-        else:
-            i += 1
-    return '', '', ''
+                    rhs = fmla[i + len(conn):].strip()
+                    return lhs, conn, rhs
+        i += 1
 
-# Return the LHS of a binary connective formula
+    if depth != 0:
+        # Unmatched opening parenthesis
+        return None, None, None
+
+    # No top-level binary connective found
+    return None, None, None
+
 def lhs(fmla):
+    """
+    Returns the left-hand side of a binary connective formula.
+
+    Parameters:
+        fmla (str): The logical formula as a string.
+
+    Returns:
+        str: The left-hand side formula, or None if not applicable.
+    """
     left, _, _ = split_binary(fmla)
     return left
 
-# Return the connective symbol of a binary connective formula
 def con(fmla):
+    """
+    Returns the connective symbol of a binary connective formula.
+
+    Parameters:
+        fmla (str): The logical formula as a string.
+
+    Returns:
+        str: The connective symbol, or None if not applicable.
+    """
     _, connective, _ = split_binary(fmla)
     return connective
 
-# Return the RHS of a binary connective formula
 def rhs(fmla):
+    """
+    Returns the right-hand side of a binary connective formula.
+
+    Parameters:
+        fmla (str): The logical formula as a string.
+
+    Returns:
+        str: The right-hand side formula, or None if not applicable.
+    """
     _, _, right = split_binary(fmla)
     return right
 
 def theory(fmla):
+    """
+    Constructs a theory from a given formula.
+
+    Parameters:
+        fmla (str): The logical formula as a string.
+
+    Returns:
+        list: A list containing the formula.
+    """
     return [fmla]
 
 def sat(tableau):

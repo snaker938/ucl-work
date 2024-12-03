@@ -55,7 +55,7 @@ def parse(fmla):
             elif c == ')':
                 depth -= 1
                 if depth < 0:
-                    return None, None, None  # Unmatched closing parenthesis
+                    return None, None, None
             elif depth == 0:
                 for conn in connectives:
                     if fmla.startswith(conn, i):
@@ -64,7 +64,7 @@ def parse(fmla):
                         return lhs, conn, rhs
             i += 1
         if depth != 0:
-            return None, None, None  # Unmatched opening parenthesis
+            return None, None, None
         return None, None, None
 
     # Handle formulas with parentheses
@@ -184,10 +184,8 @@ def split_binary(fmla):
         i += 1
 
     if depth != 0:
-        # Unmatched opening parenthesis
         return None, None, None
 
-    # No top-level binary connective found
     return None, None, None
 
 def lhs(fmla):

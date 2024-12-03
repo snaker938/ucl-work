@@ -182,65 +182,65 @@ def rhs(fmla):
 def theory(fmla):
     return [fmla]
 
-def parse_fmla(fmla):
-    fmla = fmla.strip()
-    if not fmla:
-        return -1  # Empty formula
-
-    # Handle negations
-    if fmla.startswith('~'):
-        sub_fmla = fmla[1:].strip()
-        if sub_fmla:
-            return 2  # Negation
-        else:
-            return -1  # Invalid formula
-
-    # Handle universal quantifier
-    if fmla.startswith('A') and len(fmla) > 1 and fmla[1].isalpha():
-        var = fmla[1]
-        sub_fmla = fmla[2:].strip()
-        if sub_fmla:
-            return 3  # Universal quantifier
-        else:
-            return -1  # Invalid formula
-
-    # Handle existential quantifier
-    if fmla.startswith('E') and len(fmla) > 1 and fmla[1].isalpha():
-        var = fmla[1]
-        sub_fmla = fmla[2:].strip()
-        if sub_fmla:
-            return 4  # Existential quantifier
-        else:
-            return -1  # Invalid formula
-
-    # Handle binary connectives
-    # Remove outer parentheses if they enclose the entire formula
-    if fmla.startswith('(') and fmla.endswith(')'):
-        fmla = fmla[1:-1].strip()
-
-    # Find the main connective at the top level
-    depth = 0
-    for i in range(len(fmla)):
-        if fmla[i] == '(':
-            depth += 1
-        elif fmla[i] == ')':
-            depth -= 1
-        elif depth == 0:
-            # Look ahead for multi-character connectives
-            if fmla[i:i+2] in ['/\\', '\\/', '=>']:
-                conn = fmla[i:i+2]
-                return 5  # Binary connective
-            elif fmla[i:i+1] in ['/\\', '\\/', '=>']:
-                conn = fmla[i:i+1]
-                return 5  # Binary connective
-
-    # If none of the above, it's an atom
-    return 0  # Atom
-
-
 def sat(tableau):
     MAX_CONSTANTS = 10
     constant_counter = 0  # To ensure unique constants
+    
+    def parse_fmla(fmla):
+        fmla = fmla.strip()
+        if not fmla:
+            return -1  # Empty formula
+
+        # Handle negations
+        if fmla.startswith('~'):
+            sub_fmla = fmla[1:].strip()
+            if sub_fmla:
+                return 2  # Negation
+            else:
+                return -1  # Invalid formula
+
+        # Handle universal quantifier
+        if fmla.startswith('A') and len(fmla) > 1 and fmla[1].isalpha():
+            var = fmla[1]
+            sub_fmla = fmla[2:].strip()
+            if sub_fmla:
+                return 3  # Universal quantifier
+            else:
+                return -1  # Invalid formula
+
+        # Handle existential quantifier
+        if fmla.startswith('E') and len(fmla) > 1 and fmla[1].isalpha():
+            var = fmla[1]
+            sub_fmla = fmla[2:].strip()
+            if sub_fmla:
+                return 4  # Existential quantifier
+            else:
+                return -1  # Invalid formula
+
+        # Handle binary connectives
+        # Remove outer parentheses if they enclose the entire formula
+        if fmla.startswith('(') and fmla.endswith(')'):
+            fmla = fmla[1:-1].strip()
+
+        # Find the main connective at the top level
+        depth = 0
+        for i in range(len(fmla)):
+            if fmla[i] == '(':
+                depth += 1
+            elif fmla[i] == ')':
+                depth -= 1
+            elif depth == 0:
+                # Look ahead for multi-character connectives
+                if fmla[i:i+2] in ['/\\', '\\/', '=>']:
+                    conn = fmla[i:i+2]
+                    return 5  # Binary connective
+                elif fmla[i:i+1] in ['/\\', '\\/', '=>']:
+                    conn = fmla[i:i+1]
+                    return 5  # Binary connective
+
+        # If none of the above, it's an atom
+        return 0  # Atom
+
 
     def substitute(fmla, var, const):
         # Improved substitution function
@@ -293,7 +293,7 @@ def sat(tableau):
     stack = []
     initial_formulas = flatten(tableau)
     initial_formulas = [simplify(f) for f in initial_formulas]
-    # print("Initial formulas:", initial_formulas)
+
     
     # Track universal formulas and their instantiations
     univ_formulas = {}  # formula -> set of constants used
@@ -301,11 +301,6 @@ def sat(tableau):
 
     while stack:
         formulas, constants, processed, constants_count = stack.pop()
-        # print("\nPopped from stack:")
-        # print("Formulas:", formulas)
-        # print("Constants:", constants)
-        # print("Processed:", processed)
-        # print("Constants count:", constants_count)
 
         formulas = formulas.copy()
         constants = constants.copy()
@@ -314,16 +309,13 @@ def sat(tableau):
         index = 0
         while index < len(formulas):
             f = simplify(formulas[index])
-            # print("\nProcessing formula:", f)
             index += 1
 
             parsed_type = parse_fmla(f)
-            # print("Parsed type:", parsed_type)
 
             # Special handling for nested quantifiers
             if has_nested_quantifiers(f):
                 if constants_count >= MAX_CONSTANTS - 1:  # Need room for at least 2 constants
-                    # print("Reached MAX_CONSTANTS with nested quantifiers remaining")
                     return 2
 
             if parsed_type == 3:  # Universal quantifier
@@ -332,19 +324,14 @@ def sat(tableau):
                 
                 # If we have a nested quantifier and are close to MAX_CONSTANTS
                 if has_nested_quantifiers(f) and constants_count >= MAX_CONSTANTS - 2:
-                    # print("Insufficient constants remaining for nested quantifiers")
                     return 2
 
                 # Process universal quantifier
-                # print("Universal quantifier:", f)
                 var = f[1]
                 sub_f = f[2:].strip()
-                # print("Variable:", var)
-                # print("Subformula:", sub_f)
 
                 # Vacuous quantifier handling
                 if var not in sub_f:
-                    # print(f"Variable {var} is not in subformula; simplifying vacuous quantifier.")
                     f = sub_f  # Replace quantifier with subformula
                     formulas[index - 1] = f  # Update current formula
                     index -= 1  # Reprocess this formula
@@ -356,7 +343,6 @@ def sat(tableau):
                     if c not in univ_formulas[f]:
                         instantiated_f = simplify(substitute(sub_f, var, c))
                         if instantiated_f not in processed:
-                            # print(f"Instantiating with existing constant {c}: {instantiated_f}")
                             formulas.append(instantiated_f)
                             univ_formulas[f].add(c)
                             instantiated = True
@@ -364,113 +350,94 @@ def sat(tableau):
                 # Create new constant if needed
                 if not instantiated:
                     if constants_count >= MAX_CONSTANTS:
-                        # print("Reached MAX_CONSTANTS with universal quantifier remaining")
                         return 2
                     new_const = f'c{constants_count + 1}'
                     constants.append(new_const)
                     constants_count += 1
-                    # print("Introduced new constant:", new_const)
+
                     instantiated_f = simplify(substitute(sub_f, var, new_const))
-                    # print("Adding instantiated formula:", instantiated_f)
+    
                     formulas.append(instantiated_f)
                     univ_formulas[f].add(new_const)
 
                 # Always re-add universal formula unless fully instantiated
                 if len(univ_formulas[f]) < MAX_CONSTANTS:
                     formulas.append(f)
-                    # print("Re-added universal formula for future instantiation")
                 continue
 
             # Rest of the function
             if f in processed and parsed_type != 3:  # Don't skip universal formulas
-                # print("Already processed:", f)
                 continue
 
             if ('~' + f) in processed or ('~' + f) in formulas[index:]:
-                # print("Contradiction found with formula:", f)
                 break
             if f.startswith('~') and (f[1:] in processed or f[1:] in formulas[index:]):
-                # print("Contradiction found with negation of formula:", f)
                 break
 
             processed.add(f)
-            # print("Processed set updated:", processed)
 
+            # Assuming atom
             if parsed_type == 0:
-                # print("Assuming atom:", f)
                 continue
 
             elif parsed_type == 2:
-                # Negation handling (same as before)
-                # print("Negation:", f)
+                # Negation handling
                 sub_f = simplify(f[1:])
-                # print("Subformula after negation simplification:", sub_f)
+        
                 sub_parsed_type = parse_fmla(sub_f)
-                # print("Subformula parsed type:", sub_parsed_type)
+           
+                # Assuming negated atom
                 if sub_parsed_type == 0:
-                    # print("Assuming negated atom:", sub_f)
                     continue
                 elif sub_parsed_type == 5:
                     lhs_f = lhs(sub_f)
                     rhs_f = rhs(sub_f)
                     conn = con(sub_f)
-                    # print("Negation of binary connective:", sub_f)
                     if conn == '/\\':
-                        # print("Adding branches for negation of conjunction")
                         stack.append(([simplify('~' + lhs_f)] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                         stack.append(([simplify('~' + rhs_f)] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                         break
                     elif conn == '\\/':
-                        # print("Expanding negation of disjunction to conjunction of negations")
                         formulas.extend([simplify('~' + lhs_f), simplify('~' + rhs_f)])
                     elif conn == '=>':
-                        # print("Expanding negation of implication to conjunction")
                         formulas.extend([lhs_f, simplify('~' + rhs_f)])
 
             elif parsed_type == 4:  # Existential quantifier
                 var = f[1]
                 sub_f = f[2:].strip()
-                # print("Variable:", var)
-                # print("Subformula:", sub_f)
 
                 # Vacuous quantifier handling
                 if var not in sub_f:
-                    # print(f"Variable {var} is not in subformula; simplifying vacuous quantifier.")
                     f = sub_f  # Replace quantifier with subformula
                     formulas[index - 1] = f  # Update current formula
                     index -= 1
                     continue
 
                 if constants_count >= MAX_CONSTANTS:
-                    # print("Reached MAX_CONSTANTS")
                     return 2
-                # Introduce a unique constant for this quantifier
+
                 constant_counter += 1
                 new_const = f'c_{var}_{constant_counter}'
                 constants.append(new_const)
                 constants_count += 1
-                # print("Introduced new constant:", new_const)
+
                 instantiated_f = simplify(substitute(sub_f, var, new_const))
-                # print("Adding instantiated formula:", instantiated_f)
+
                 if instantiated_f not in processed:
                     formulas.append(instantiated_f)
                 continue
 
             elif parsed_type == 5:  # Binary connective
-                # print("Binary connective:", f)
                 lhs_f = lhs(f)
                 rhs_f = rhs(f)
                 conn = con(f)
                 if conn == '/\\':
-                    # print("Adding LHS and RHS to formulas")
                     formulas.extend([lhs_f, rhs_f])
                 elif conn == '\\/':
-                    # print("Adding branches for disjunction")
                     stack.append(([lhs_f] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                     stack.append(([rhs_f] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                     break
                 elif conn == '=>':
-                    # print("Adding branches for implication")
                     stack.append(([simplify('~' + lhs_f)] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                     stack.append(([rhs_f] + formulas[index:], constants.copy(), processed.copy(), constants_count))
                     break
@@ -479,15 +446,14 @@ def sat(tableau):
             # Check if we have universal quantifiers that need more constants
             for univ_f in univ_formulas:
                 if len(univ_formulas[univ_f]) < MAX_CONSTANTS and has_nested_quantifiers(univ_f):
-                    # print("Universal quantifier with nested quantifiers needs more constants")
                     return 2
                     
-            # print("Open branch found")
+            # Open branch found
             return 1
 
-        # print("Branch closed due to contradiction")
+        # Branch closed due to contradiction
     
-    # print("All branches closed")
+    # All branches closed
     return 0
 
 #------------------------------------------------------------------------------------------------------------------------------:

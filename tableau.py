@@ -4,23 +4,40 @@ MAX_CONSTANTS = 10
 
 # Parse a formula, consult parseOutputs for return values.
 def parse(fmla):
+    """
+    Parses a logical formula and returns an integer code representing its type.
+
+    Return codes:
+        0: Not a formula
+        1: Atom (First-order logic)
+        2: Negation of a first-order logic formula
+        3: Universally quantified formula
+        4: Existentially quantified formula
+        5: Binary connective first-order formula
+        6: Proposition (Propositional logic)
+        7: Negation of a propositional formula
+        8: Binary connective propositional formula
+    """
     fmla = fmla.strip()
-    
-    # Helper components
+
+    # Define allowed symbols
     propositions = {'p', 'q', 'r', 's'}
     variables = {'x', 'y', 'z', 'w'}
     predicates = {'P', 'Q', 'R', 'S'}
     connectives = {'/\\', '\\/', '=>'}
     quantifiers = {'A', 'E'}
-    
+
     # Helper functions
     def is_proposition(s):
+        """Check if s is a propositional variable."""
         return s in propositions
-    
+
     def is_variable(s):
+        """Check if s is a variable."""
         return s in variables
-    
+
     def is_atom(s):
+        """Check if s is an atomic first-order formula (predicate with variables)."""
         if '(' in s and s.endswith(')'):
             pred_part, args_part = s.split('(', 1)
             args_part = args_part[:-1]  # Remove the closing parenthesis
@@ -28,110 +45,98 @@ def parse(fmla):
             if pred_part in predicates and all(is_variable(arg.strip()) for arg in args):
                 return True
         return False
-    
+
     def split_binary(fmla):
+        """Split formula into lhs, connective, and rhs if it has a top-level binary connective."""
         depth = 0
         i = 0
         while i < len(fmla):
             c = fmla[i]
             if c == '(':
                 depth += 1
-                i += 1
             elif c == ')':
                 depth -= 1
-                i += 1
+                if depth < 0:
+                    return None, None, None  # Unmatched closing parenthesis
             elif depth == 0:
-                # Check for connectives starting at this position
                 for conn in connectives:
                     if fmla.startswith(conn, i):
                         lhs = fmla[:i].strip()
-                        rhs = fmla[i+len(conn):].strip()
+                        rhs = fmla[i + len(conn):].strip()
                         return lhs, conn, rhs
-                i += 1
-            else:
-                i += 1
+            i += 1
+        if depth != 0:
+            return None, None, None  # Unmatched opening parenthesis
         return None, None, None
-    
-    # Base cases
-    # Handle parentheses around formulas
+
+    # Handle formulas with parentheses
     if fmla.startswith('(') and fmla.endswith(')'):
         inner_fmla = fmla[1:-1].strip()
-        # Attempt to parse as binary connective
         lhs, conn, rhs = split_binary(inner_fmla)
         if conn:
             lhs_parse = parse(lhs)
             rhs_parse = parse(rhs)
             if lhs_parse == 0 or rhs_parse == 0:
-                return 0  # 'not a formula'
-            if lhs_parse in {6, 7, 8} and rhs_parse in {6, 7, 8}:
-                return 8  # 'a binary connective propositional formula'
-            elif lhs_parse in {1, 2, 3, 4, 5} and rhs_parse in {1, 2, 3, 4, 5}:
-                return 5  # 'a binary connective first order formula'
+                return 0  # Not a formula
+            if lhs_parse > 5 and rhs_parse > 5:
+                return 8  # Binary connective propositional formula
+            elif lhs_parse <= 5 and rhs_parse <= 5:
+                return 5  # Binary connective first-order formula
             else:
-                return 0  # 'not a formula'
+                return 0  # Not a formula
         else:
-            # No main connective found, parse inner formula
             return parse(inner_fmla)
-    
+
+    # Check for propositional variable
     if is_proposition(fmla):
-        return 6  # 'a proposition'
-    
+        return 6  # Proposition
+
+    # Check for first-order atom
     if is_atom(fmla):
-        return 1  # 'an atom'
-    
-    # Negation
+        return 1  # Atom
+
+    # Handle negation
     if fmla.startswith('~'):
         sub_fmla = fmla[1:].strip()
         sub_parse = parse(sub_fmla)
         if sub_parse == 0:
-            return 0  # 'not a formula'
-        elif sub_parse in {1, 2, 3, 4, 5}:
-            return 2  # 'a negation of a first order logic formula'
-        elif sub_parse in {6, 7, 8}:
-            return 7  # 'a negation of a propositional formula'
-        else:
-            return 0  # 'not a formula'
-    
-    # Quantifiers
-    idx = 0
-    quantifier_sequence = ''
-    while idx < len(fmla) - 1:
-        if fmla[idx] in quantifiers and fmla[idx + 1] in variables:
-            quantifier_sequence += fmla[idx] + fmla[idx + 1]
-            idx += 2
-            # Skip any whitespace
-            while idx < len(fmla) and fmla[idx].isspace():
-                idx += 1
-        else:
-            break
-    if quantifier_sequence:
+            return 0
+        elif sub_parse <= 5:
+            return 2  # Negation of first-order logic formula
+        elif sub_parse >= 6:
+            return 7  # Negation of propositional formula
+
+    # Handle quantifiers
+    if len(fmla) >= 2 and fmla[0] in quantifiers and fmla[1] in variables:
+        idx = 2
+        while idx < len(fmla) and fmla[idx].isspace():
+            idx += 1
         sub_fmla = fmla[idx:]
         sub_parse = parse(sub_fmla)
-        if sub_parse in {1, 2, 3, 4, 5}:
-            first_quant = quantifier_sequence[0]  # Use the first quantifier
-            if first_quant == 'A':
-                return 3  # 'a universally quantified formula'
-            else:
-                return 4  # 'an existentially quantified formula'
+        if sub_parse and sub_parse <= 5:
+            return 3 if fmla[0] == 'A' else 4
         else:
-            return 0  # 'not a formula'
-    
-    # Binary Connectives
+            return 0
+
+    # Check for binary connectives at the top level
     lhs, conn, rhs = split_binary(fmla)
     if conn:
         lhs_parse = parse(lhs)
         rhs_parse = parse(rhs)
         if lhs_parse == 0 or rhs_parse == 0:
-            return 0  # 'not a formula'
-        if lhs_parse in {6, 7, 8} and rhs_parse in {6, 7, 8}:
-            return 8  # 'a binary connective propositional formula'
-        elif lhs_parse in {1, 2, 3, 4, 5} and rhs_parse in {1, 2, 3, 4, 5}:
-            return 5  # 'a binary connective first order formula'
+            return 0
+        if lhs_parse > 5 and rhs_parse > 5:
+            return 8
+        elif lhs_parse <= 5 and rhs_parse <= 5:
+            return 5
         else:
-            return 0  # 'not a formula'
-    
-    # If none of the above, it's not a formula
-    return 0  # 'not a formula'
+            return 0
+
+    # Not a valid formula
+    return 0
+
+
+
 
 # Helper function to split a binary connective formula into its components
 def split_binary(fmla):

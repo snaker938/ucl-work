@@ -440,7 +440,7 @@ def sat(tableau):
 
             parsed_type = parse_fmla(f)
 
-            # Resource limitation for nested quantifiers
+            # If nested quantifiers, check for termination
             if has_nested_quantifiers(f) and constants_count >= MAX_CONSTANTS - 1:
                 return 2  # Indeterminate due to resource limitations
 
@@ -448,7 +448,7 @@ def sat(tableau):
                 if f not in univ_formulas:
                     univ_formulas[f] = set()
 
-                # Resource limitation for nested quantifiers
+                # If nested quantifiers, check for termination
                 if has_nested_quantifiers(f) and constants_count >= MAX_CONSTANTS - 2:
                     return 2
 
